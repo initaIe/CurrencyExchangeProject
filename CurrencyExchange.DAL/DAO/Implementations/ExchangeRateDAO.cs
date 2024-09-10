@@ -1,16 +1,16 @@
-﻿using CurrencyExchange.DAL.Interfaces;
-using CurrencyExchange.DTOs.ExchangeRates;
+﻿using CurrencyExchange.DAL.DAO.Interfaces;
+using CurrencyExchange.DTOs.ExchangeRate;
 using Microsoft.Data.Sqlite;
 
-namespace CurrencyExchange.DAL.Implementations;
+namespace CurrencyExchange.DAL.DAO.Implementations;
 
 public class ExchangeRateDAO(SqliteRepository repository)
-    : IBaseDAO<CreateExchangeRate, ReadExchangeRate, UpdateExchangeRate>
+    : IBaseDAO<CreateExchangeRateDTO, GetExchangeRateDTO, UpdateExchangeRateDTO>
 {
-    public async Task Create(CreateExchangeRate entity)
+    public async Task<bool> Create(CreateExchangeRateDTO entity)
     {
         var commandText = "INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate) " +
-                          "VALUES (@BaseCurrencyId, @TargetCurrencyId, @Rate)";
+                          "VALUES (@BaseCurrencyId, @TargetCurrencyId, @Rate);";
 
         var parameters = new[]
         {
@@ -19,12 +19,14 @@ public class ExchangeRateDAO(SqliteRepository repository)
             new SqliteParameter("@Rate", entity.Rate)
         };
 
-        await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+
+        return affectedRows > 0;
     }
 
-    public async Task<ReadExchangeRate> Read(int id)
+    public async Task<GetExchangeRateDTO> GetById(int id)
     {
-        var commandText = "SELECT * FROM ReadExchangeRateResponse WHERE Id = @Id";
+        var commandText = "SELECT * FROM ExchangeRates WHERE Id = @Id;";
 
         var parameters = new[]
         {
@@ -33,7 +35,7 @@ public class ExchangeRateDAO(SqliteRepository repository)
 
         return await repository.QuerySingleAsync(
             commandText,
-            reader => new ReadExchangeRate
+            reader => new GetExchangeRateDTO
             {
                 Id = reader.GetInt32(0),
                 BaseCurrencyId = reader.GetInt32(1),
@@ -44,13 +46,13 @@ public class ExchangeRateDAO(SqliteRepository repository)
         );
     }
 
-    public async Task<IEnumerable<ReadExchangeRate>> ReadAll()
+    public async Task<IEnumerable<GetExchangeRateDTO>> GetAll()
     {
-        var commandText = "SELECT * FROM ReadExchangeRateResponse";
+        var commandText = "SELECT * FROM ExchangeRates;";
 
         return await repository.QueryAsync(
             commandText,
-            reader => new ReadExchangeRate
+            reader => new GetExchangeRateDTO
             {
                 Id = reader.GetInt32(0),
                 BaseCurrencyId = reader.GetInt32(1),
@@ -60,33 +62,39 @@ public class ExchangeRateDAO(SqliteRepository repository)
         );
     }
 
-    public async Task Delete(int id)
+    public async Task<bool> Delete(int id)
     {
-        var commandText = "DELETE FROM ExchangeRates" +
-                          "WHERE Id=@Id";
+        var commandText = "DELETE FROM ExchangeRates " +
+                          "WHERE Id=@Id;";
 
         var parameters = new[]
         {
             new SqliteParameter("@Id", id)
         };
 
-        await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+
+        return affectedRows > 0;
     }
 
-    public async Task Update(UpdateExchangeRate entity)
+    public async Task<bool> Update(UpdateExchangeRateDTO entity)
     {
-        var commandText = "UPDATE ExchangeRates" +
-                          "SET BaseCurrencyId = @BaseCurrencyId," +
-                          "TargetCurrencyId = @TargetCurrencyId," +
-                          "Rate = @Rate;";
+        var commandText = "UPDATE ExchangeRates " +
+                          "SET BaseCurrencyId = @BaseCurrencyId, " +
+                          "TargetCurrencyId = @TargetCurrencyId, " +
+                          "Rate = @Rate " +
+                          "WHERE Id = @Id;";
 
         var parameters = new[]
         {
+            new SqliteParameter("@Id", entity.Id),
             new SqliteParameter("@BaseCurrencyId", entity.BaseCurrencyId),
             new SqliteParameter("@TargetCurrencyId", entity.TargetCurrencyId),
             new SqliteParameter("@Rate", entity.Rate)
         };
 
-        await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+
+        return affectedRows > 0;
     }
 }

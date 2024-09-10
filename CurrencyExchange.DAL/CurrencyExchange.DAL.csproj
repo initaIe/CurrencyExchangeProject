@@ -12,12 +12,17 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CurrencyExchange.Domain\CurrencyExchange.Domain.csproj" />
+      <ProjectReference Include="..\CurrencyExchange.DTOs\CurrencyExchange.DTOs.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <None Update="Resources\CurrencyExchange.db">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DAO\" />
     </ItemGroup>
 
 </Project>

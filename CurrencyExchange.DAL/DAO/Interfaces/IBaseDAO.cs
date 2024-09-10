@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using CurrencyExchange.Domain.Entity;
+﻿namespace CurrencyExchange.DAL.DAO.Interfaces;
 
-namespace CurrencyExchange.DAL.Interfaces;
-
-public interface IBaseDAO<in TCreationDTO, TReadDTO, in TUpdateDTO>
+public interface IBaseDAO<in TCreationDTO, TGetDTO, in TUpdateDTO>
 {
-    Task Create(TCreationDTO entity);
-    Task<TReadDTO> GetById(int id);
-    Task<IEnumerable<TReadDTO>> GetAll();
-    Task Delete(int id);
-    Task Update(TUpdateDTO entity);
+    Task<bool> Create(TCreationDTO entity);
+    Task<TGetDTO> GetById(int id);
+    Task<IEnumerable<TGetDTO>> GetAll();
+    Task<bool> Delete(int id);
+    Task<bool> Update(TUpdateDTO entity);
 }

@@ -10,7 +10,7 @@ public class SqliteRepository(string connectionString)
         return new SqliteConnection(connectionString);
     }
 
-    public async Task ExecuteAsync(string commandText, params SqliteParameter[] parameters)
+    public async Task<int> ExecuteAsync(string commandText, params SqliteParameter[] parameters)
     {
         await using var connection = CreateConnection();
         await connection.OpenAsync();
@@ -19,7 +19,7 @@ public class SqliteRepository(string connectionString)
         command.CommandText = commandText;
         command.Parameters.AddRange(parameters);
         
-        await command.ExecuteNonQueryAsync();
+        return await command.ExecuteNonQueryAsync();
     }
 
     public async Task<T> QuerySingleAsync<T>(string commandText, Func<IDataReader, T> map,
