@@ -1,14 +1,16 @@
-﻿using CurrencyExchange.Domain.Response;
-using CurrencyExchange.DTOs.Currency;
+﻿using CurrencyExchange.DAL.DAO.DTOs.Currency;
+using CurrencyExchange.Domain.Entity;
+using CurrencyExchange.Domain.Response;
+using CurrencyExchange.Service.DTOs;
 
 namespace CurrencyExchange.Service.Interfaces;
 
 public interface ICurrencyService
 {
-    Task<BaseResponse<IEnumerable<GetCurrencyDTO>>> GetCurrenciesAsync();
-    Task<BaseResponse<IEnumerable<GetCurrencyDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber);
-    Task<BaseResponse<GetCurrencyDTO>> GetCurrencyByIdAsync(int id);
-    Task<BaseResponse<bool>> CreateCurrencyAsync(CreateCurrencyDTO dto);
-    Task<BaseResponse<bool>> UpdateCurrencyAsync(UpdateCurrencyDTO dto);
+    Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync();
+    Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber);
+    Task<BaseResponse<CurrencyDTO>> GetCurrencyByIdAsync(int id);
+    Task<BaseResponse<bool>> CreateCurrencyAsync(CurrencyDTO dto);
+    Task<BaseResponse<bool>> UpdateCurrencyAsync(CurrencyDTO dto);
     Task<BaseResponse<bool>> DeleteCurrencyAsync(int id);
 }

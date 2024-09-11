@@ -5,11 +5,9 @@ namespace CurrencyExchange.DAL.Commons;
 
 public class DataBaseHelper(string connectionString)
 {
-    private readonly string _connectionString = connectionString;
-
     private SqliteConnection CreateConnection()
     {
-        return new SqliteConnection(_connectionString);
+        return new SqliteConnection(connectionString);
     }
 
     public async Task<int> ExecuteAsync(string commandText, params SqliteParameter[] parameters)

@@ -1,4 +1,4 @@
-﻿namespace CurrencyExchange.DTOs.Currency;
+﻿namespace CurrencyExchange.DAL.DAO.DTOs.Currency;
 
 public class GetCurrencyDTO
 {

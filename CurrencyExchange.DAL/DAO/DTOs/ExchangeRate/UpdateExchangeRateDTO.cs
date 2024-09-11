@@ -1,6 +1,6 @@
-﻿namespace CurrencyExchange.DTOs.ExchangeRate;
+﻿namespace CurrencyExchange.DAL.DAO.DTOs.ExchangeRate;
 
-public class GetExchangeRateDTO
+public class UpdateExchangeRateDTO
 {
     public int Id { get; set; }
     public int BaseCurrencyId { get; set; }

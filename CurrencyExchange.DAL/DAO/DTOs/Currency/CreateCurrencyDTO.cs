@@ -1,8 +1,7 @@
-﻿namespace CurrencyExchange.DTOs.Currency;
+﻿namespace CurrencyExchange.DAL.DAO.DTOs.Currency;
 
-public class UpdateCurrencyDTO
+public class CreateCurrencyDTO
 {
-    public int Id { get; set; }
     public string Code { get; set; } = default!;
     public string FullName { get; set; } = default!;
     public string Sign { get; set; } = default!;

@@ -12,11 +12,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\CurrencyExchange.Domain\CurrencyExchange.Domain.csproj"/>
-        <ProjectReference Include="..\CurrencyExchange.DTOs\CurrencyExchange.DTOs.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="DAO\"/>
+        <Folder Include="DAO\DTOs\" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using CurrencyExchange.Domain.Enum;
+﻿using CurrencyExchange.Domain.Enums;
 
 namespace CurrencyExchange.Domain.Response;
 

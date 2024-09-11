@@ -1,7 +1,7 @@
-﻿using CurrencyExchange.DAL.DAO.Interfaces;
+﻿using CurrencyExchange.DAL.DAO.DTOs.Currency;
+using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Entity;
-using CurrencyExchange.DTOs.Currency;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
 

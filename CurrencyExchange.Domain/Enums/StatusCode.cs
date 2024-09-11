@@ -1,4 +1,4 @@
-﻿namespace CurrencyExchange.Domain.Enum;
+﻿namespace CurrencyExchange.Domain.Enums;
 
 public enum StatusCode
 {

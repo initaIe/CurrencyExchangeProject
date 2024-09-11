@@ -1,7 +1,8 @@
-﻿namespace CurrencyExchange.DTOs.ExchangeRate;
+﻿namespace CurrencyExchange.DAL.DAO.DTOs.ExchangeRate;
 
-public class CreateExchangeRateDTO
+public class GetExchangeRateDTO
 {
+    public int Id { get; set; }
     public int BaseCurrencyId { get; set; }
     public int TargetCurrencyId { get; set; }
     public decimal Rate { get; set; }
