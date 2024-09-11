@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace CurrencyExchange.DAL.Repository.Interfaces;
+﻿namespace CurrencyExchange.DAL.Repository.Interfaces;
 
 public interface IBaseRepository<T>
 {

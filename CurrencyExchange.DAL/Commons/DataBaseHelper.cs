@@ -35,10 +35,7 @@ public class DataBaseHelper(string connectionString)
         command.Parameters.AddRange(parameters);
 
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
-        {
-            return map(reader);
-        }
+        if (await reader.ReadAsync()) return map(reader);
         return default;
     }
 
@@ -55,10 +52,7 @@ public class DataBaseHelper(string connectionString)
         command.Parameters.AddRange(parameters);
 
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            results.Add(map(reader));   
-        }
+        while (await reader.ReadAsync()) results.Add(map(reader));
 
         return results;
     }

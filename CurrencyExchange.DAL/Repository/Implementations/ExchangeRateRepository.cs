@@ -1,7 +1,6 @@
 ﻿using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Entity;
-using CurrencyExchange.DTOs.Currency;
 using CurrencyExchange.DTOs.ExchangeRate;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
@@ -13,7 +12,7 @@ public class ExchangeRateRepository(
 {
     public async Task<bool> CreateAsync(ExchangeRate entity)
     {
-        var dto = new CreateExchangeRateDTO()
+        var dto = new CreateExchangeRateDTO
         {
             BaseCurrencyId = entity.BaseCurrency.Id,
             TargetCurrencyId = entity.TargetCurrency.Id,
@@ -21,6 +20,7 @@ public class ExchangeRateRepository(
         };
         return await exchangeRateDAO.CreateAsync(dto);
     }
+
     public async Task<ExchangeRate> GetByIdAsync(int id)
     {
         var dto = await exchangeRateDAO.GetByIdAsync(id);
@@ -40,7 +40,7 @@ public class ExchangeRateRepository(
     public async Task<IEnumerable<ExchangeRate>> GetAllAsync()
     {
         var dtoList = await exchangeRateDAO.GetAllAsync();
-        
+
         var result = new List<ExchangeRate>();
 
         foreach (var dto in dtoList)
@@ -65,7 +65,7 @@ public class ExchangeRateRepository(
     public async Task<IEnumerable<ExchangeRate>> GetAllAsync(int pageSize, int pageNumber)
     {
         var dtoList = await exchangeRateDAO.GetAllAsync(pageSize, pageNumber);
-        
+
         var result = new List<ExchangeRate>();
 
         foreach (var dto in dtoList)
@@ -94,7 +94,7 @@ public class ExchangeRateRepository(
 
     public async Task<bool> UpdateAsync(ExchangeRate entity)
     {
-        var dto = new UpdateExchangeRateDTO()
+        var dto = new UpdateExchangeRateDTO
         {
             Id = entity.Id,
             BaseCurrencyId = entity.BaseCurrency.Id,

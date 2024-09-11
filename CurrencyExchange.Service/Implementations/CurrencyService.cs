@@ -14,16 +14,16 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         try
         {
             var currencies = await currencyRepository.GetAllAsync();
-            
-            var result = currencies.Select(currency => new GetCurrencyDTO()
+
+            var result = currencies.Select(currency => new GetCurrencyDTO
             {
                 Id = currency.Id,
                 Code = currency.Code,
                 FullName = currency.FullName,
                 Sign = currency.Sign
             });
-            
-            return new BaseResponse<IEnumerable<GetCurrencyDTO>>()
+
+            return new BaseResponse<IEnumerable<GetCurrencyDTO>>
             {
                 Description = "Success.",
                 Data = result,
@@ -32,7 +32,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
         catch (Exception ex)
         {
-            return new BaseResponse<IEnumerable<GetCurrencyDTO>>()
+            return new BaseResponse<IEnumerable<GetCurrencyDTO>>
             {
                 Description = $"Internal Server Error: {ex.Message}",
                 StatusCode = StatusCode.InternalServerError
@@ -52,15 +52,13 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             var currency = await currencyRepository.GetByIdAsync(id);
 
             if (currency == null)
-            {
-                return new BaseResponse<GetCurrencyDTO>()
+                return new BaseResponse<GetCurrencyDTO>
                 {
                     Description = "Currency not found.",
                     StatusCode = StatusCode.NotFound
                 };
-            }
 
-            var dto = new GetCurrencyDTO()
+            var dto = new GetCurrencyDTO
             {
                 Id = currency.Id,
                 Code = currency.Code,
@@ -68,7 +66,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
                 Sign = currency.Sign
             };
 
-            return new BaseResponse<GetCurrencyDTO>()
+            return new BaseResponse<GetCurrencyDTO>
             {
                 Description = "Success.",
                 StatusCode = StatusCode.OK,
@@ -77,7 +75,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
         catch (Exception ex)
         {
-            return new BaseResponse<GetCurrencyDTO>()
+            return new BaseResponse<GetCurrencyDTO>
             {
                 Description = $"[GetCurrencyDTO] : {ex.Message}",
                 StatusCode = StatusCode.InternalServerError

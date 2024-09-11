@@ -1,8 +1,6 @@
 ﻿using CurrencyExchange.DAL.Commons;
 using CurrencyExchange.DAL.DAO.Interfaces;
-using CurrencyExchange.Domain.Entity;
 using CurrencyExchange.DTOs.Currency;
-using CurrencyExchange.DTOs.ExchangeRate;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.DAO.Implementations;
