@@ -2,9 +2,10 @@
 
 public interface IBaseDAO<in TCreationDTO, TGetDTO, in TUpdateDTO>
 {
-    Task<bool> Create(TCreationDTO entity);
-    Task<TGetDTO> GetById(int id);
-    Task<IEnumerable<TGetDTO>> GetAll();
-    Task<bool> Delete(int id);
-    Task<bool> Update(TUpdateDTO entity);
+    Task<bool> CreateAsync(TCreationDTO entity);
+    Task<TGetDTO> GetByIdAsync(int id);
+    Task<IEnumerable<TGetDTO>> GetAllAsync();
+    Task<IEnumerable<TGetDTO>> GetAllAsync(int pageSize, int page);
+    Task<bool> DeleteAsync(int id);
+    Task<bool> UpdateAsync(TUpdateDTO entity);
 }

@@ -2,7 +2,7 @@
 
 public class CreateCurrencyDTO
 {
-    public string Code { get; set; } = null!;
-    public string FullName { get; set; } = null!;
-    public string Sign { get; set; } = null!;
+    public string Code { get; set; } = default!;
+    public string FullName { get; set; } = default!;
+    public string Sign { get; set; } = default!;
 }

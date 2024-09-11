@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.Domain", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.DTOs", "CurrencyExchange.DTOs\CurrencyExchange.DTOs.csproj", "{A6947996-1010-41C0-83DA-D2D64D28DB61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.Service", "CurrencyExchange.Service\CurrencyExchange.Service.csproj", "{BD6C3EED-38ED-474C-9ABA-076759334F2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{A6947996-1010-41C0-83DA-D2D64D28DB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6947996-1010-41C0-83DA-D2D64D28DB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6947996-1010-41C0-83DA-D2D64D28DB61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD6C3EED-38ED-474C-9ABA-076759334F2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD6C3EED-38ED-474C-9ABA-076759334F2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD6C3EED-38ED-474C-9ABA-076759334F2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD6C3EED-38ED-474C-9ABA-076759334F2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

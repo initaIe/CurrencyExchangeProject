@@ -3,7 +3,7 @@
 public class ExchangeRate
 {
     public int Id { get; set; }
-    public Currency BaseCurrencyId { get; set; } = null!;
-    public Currency TargetCurrencyId { get; set; } = null!;
+    public Currency BaseCurrency { get; set; } = default!;
+    public Currency TargetCurrency { get; set; } = default!;
     public decimal Rate { get; set; }
 }

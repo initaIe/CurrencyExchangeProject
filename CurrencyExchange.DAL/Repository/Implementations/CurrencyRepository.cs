@@ -8,7 +8,7 @@ namespace CurrencyExchange.DAL.Repository.Implementations;
 public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, UpdateCurrencyDTO> currencyDAO)
     : IBaseRepository<Currency>
 {
-    public async Task<bool> Create(Currency entity)
+    public async Task<bool> CreateAsync(Currency entity)
     {
         var dto = new CreateCurrencyDTO
         {
@@ -16,12 +16,12 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
             FullName = entity.FullName,
             Sign = entity.Sign
         };
-        return await currencyDAO.Create(dto);
+        return await currencyDAO.CreateAsync(dto);
     }
 
-    public async Task<Currency> GetById(int id)
+    public async Task<Currency> GetByIdAsync(int id)
     {
-        var dto = await currencyDAO.GetById(id);
+        var dto = await currencyDAO.GetByIdAsync(id);
 
         var result = new Currency
         {
@@ -34,27 +34,38 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
         return result;
     }
 
-    public async Task<IEnumerable<Currency>> GetAll()
+    public async Task<IEnumerable<Currency>> GetAllAsync()
     {
-        var dtoList = await currencyDAO.GetAll();
+        var dtoList = await currencyDAO.GetAllAsync();
 
-        var result = dtoList.Select(dto => new Currency
+        return dtoList.Select(dto => new Currency
         {
             Id = dto.Id,
             Code = dto.Code,
             FullName = dto.FullName,
             Sign = dto.Sign
         });
-
-        return result;
     }
 
-    public async Task<bool> Delete(Currency entity)
+    public async Task<IEnumerable<Currency>> GetAllAsync(int pageSize, int pageNumber)
     {
-        return await currencyDAO.Delete(entity.Id);
+        var dtoList = await currencyDAO.GetAllAsync(pageSize, pageNumber);
+
+        return dtoList.Select(dto => new Currency
+        {
+            Id = dto.Id,
+            Code = dto.Code,
+            FullName = dto.FullName,
+            Sign = dto.Sign
+        });
     }
 
-    public async Task<bool> Update(Currency entity)
+    public async Task<bool> DeleteAsync(Currency entity)
+    {
+        return await currencyDAO.DeleteAsync(entity.Id);
+    }
+
+    public async Task<bool> UpdateAsync(Currency entity)
     {
         var dto = new UpdateCurrencyDTO
         {
@@ -63,6 +74,6 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
             FullName = entity.FullName,
             Sign = entity.Sign
         };
-        return await currencyDAO.Update(dto);
+        return await currencyDAO.UpdateAsync(dto);
     }
 }

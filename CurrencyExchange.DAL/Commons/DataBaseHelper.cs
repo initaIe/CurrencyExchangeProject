@@ -1,13 +1,14 @@
 ﻿using System.Data;
 using Microsoft.Data.Sqlite;
 
-namespace CurrencyExchange.DAL;
+namespace CurrencyExchange.DAL.Commons;
 
-public class SqliteRepository(string connectionString)
+public class DataBaseHelper(string connectionString)
 {
+    private readonly string _connectionString = connectionString;
     private SqliteConnection CreateConnection()
     {
-        return new SqliteConnection(connectionString);
+        return new SqliteConnection(_connectionString);
     }
 
     public async Task<int> ExecuteAsync(string commandText, params SqliteParameter[] parameters)

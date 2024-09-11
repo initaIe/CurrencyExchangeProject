@@ -1,13 +1,14 @@
-﻿using CurrencyExchange.DAL.DAO.Interfaces;
+﻿using CurrencyExchange.DAL.Commons;
+using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DTOs.ExchangeRate;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.DAO.Implementations;
 
-public class ExchangeRateDAO(SqliteRepository repository)
+public class ExchangeRateDAO(DataBaseHelper dbHelper)
     : IBaseDAO<CreateExchangeRateDTO, GetExchangeRateDTO, UpdateExchangeRateDTO>
 {
-    public async Task<bool> Create(CreateExchangeRateDTO entity)
+    public async Task<bool> CreateAsync(CreateExchangeRateDTO entity)
     {
         var commandText = "INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate) " +
                           "VALUES (@BaseCurrencyId, @TargetCurrencyId, @Rate);";
@@ -19,12 +20,12 @@ public class ExchangeRateDAO(SqliteRepository repository)
             new SqliteParameter("@Rate", entity.Rate)
         };
 
-        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
 
         return affectedRows > 0;
     }
 
-    public async Task<GetExchangeRateDTO> GetById(int id)
+    public async Task<GetExchangeRateDTO> GetByIdAsync(int id)
     {
         var commandText = "SELECT * FROM ExchangeRates WHERE Id = @Id;";
 
@@ -33,7 +34,7 @@ public class ExchangeRateDAO(SqliteRepository repository)
             new SqliteParameter("@Id", id)
         };
 
-        return await repository.QuerySingleAsync(
+        return await dbHelper.QuerySingleAsync(
             commandText,
             reader => new GetExchangeRateDTO
             {
@@ -46,11 +47,11 @@ public class ExchangeRateDAO(SqliteRepository repository)
         );
     }
 
-    public async Task<IEnumerable<GetExchangeRateDTO>> GetAll()
+    public async Task<IEnumerable<GetExchangeRateDTO>> GetAllAsync()
     {
         var commandText = "SELECT * FROM ExchangeRates;";
 
-        return await repository.QueryAsync(
+        return await dbHelper.QueryAsync(
             commandText,
             reader => new GetExchangeRateDTO
             {
@@ -62,7 +63,32 @@ public class ExchangeRateDAO(SqliteRepository repository)
         );
     }
 
-    public async Task<bool> Delete(int id)
+    public async Task<IEnumerable<GetExchangeRateDTO>> GetAllAsync(int pageSize, int pageNumber)
+    {
+        var offset = (pageNumber - 1) * pageSize;
+
+        var commandText = "SELECT * FROM ExchangeRates LIMIT @Limit OFFSET @Offset;";
+
+        var parameters = new[]
+        {
+            new SqliteParameter("@Limit", pageSize),
+            new SqliteParameter("@Offset", offset)
+        };
+
+        return await dbHelper.QueryAsync(
+            commandText,
+            reader => new GetExchangeRateDTO
+            {
+                Id = reader.GetInt32(0),
+                BaseCurrencyId = reader.GetInt32(1),
+                TargetCurrencyId = reader.GetInt32(2),
+                Rate = reader.GetDecimal(3)
+            },
+            parameters
+        );
+    }
+
+    public async Task<bool> DeleteAsync(int id)
     {
         var commandText = "DELETE FROM ExchangeRates " +
                           "WHERE Id=@Id;";
@@ -72,12 +98,12 @@ public class ExchangeRateDAO(SqliteRepository repository)
             new SqliteParameter("@Id", id)
         };
 
-        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
 
         return affectedRows > 0;
     }
 
-    public async Task<bool> Update(UpdateExchangeRateDTO entity)
+    public async Task<bool> UpdateAsync(UpdateExchangeRateDTO entity)
     {
         var commandText = "UPDATE ExchangeRates " +
                           "SET BaseCurrencyId = @BaseCurrencyId, " +
@@ -93,7 +119,7 @@ public class ExchangeRateDAO(SqliteRepository repository)
             new SqliteParameter("@Rate", entity.Rate)
         };
 
-        var affectedRows = await repository.ExecuteAsync(commandText, parameters);
+        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
 
         return affectedRows > 0;
     }

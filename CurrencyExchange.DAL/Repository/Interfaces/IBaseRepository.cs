@@ -4,9 +4,10 @@ namespace CurrencyExchange.DAL.Repository.Interfaces;
 
 public interface IBaseRepository<T>
 {
-    Task<bool> Create(T entity);
-    Task<T> GetById(int id);
-    Task<IEnumerable<T>> GetAll();
-    Task<bool> Delete(T entity);
-    Task<bool> Update(T entity);
+    Task<bool> CreateAsync(T entity);
+    Task<T> GetByIdAsync(int id);
+    Task<IEnumerable<T>> GetAllAsync();
+    Task<IEnumerable<T>> GetAllAsync(int pageSize, int pageNumber);
+    Task<bool> DeleteAsync(T entity);
+    Task<bool> UpdateAsync(T entity);
 }
