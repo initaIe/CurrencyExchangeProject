@@ -1,5 +1,4 @@
-﻿using CurrencyExchange.DAL.DAO.DTOs.Currency;
-using CurrencyExchange.DAL.Repository.Interfaces;
+﻿using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Entity;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
@@ -114,7 +113,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
     {
         try
         {
-            var currency = new Currency()
+            var currency = new Currency
             {
                 Code = dto.Code,
                 FullName = dto.FullName,
@@ -124,16 +123,14 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             var isCreated = await currencyRepository.CreateAsync(currency);
 
             if (!isCreated)
-            {
-                return new BaseResponse<bool>()
+                return new BaseResponse<bool>
                 {
                     Description = "Error creating new currency.",
                     StatusCode = StatusCode.Conflict,
                     Data = false
                 };
-            }
 
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = "Success.",
                 StatusCode = StatusCode.OK,
@@ -142,7 +139,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
         catch (Exception ex)
         {
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = $"[Create] : {ex.Message}",
                 StatusCode = StatusCode.InternalServerError,
@@ -158,14 +155,12 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             var currency = await currencyRepository.GetByIdAsync(dto.Id);
 
             if (currency == null)
-            {
                 return new BaseResponse<bool>
                 {
                     Description = "The currency that should be updated was not found.",
                     StatusCode = StatusCode.NotFound,
                     Data = false
                 };
-            }
 
             {
                 currency.Code = dto.Code;
@@ -176,16 +171,14 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             var isUpdated = await currencyRepository.UpdateAsync(currency);
 
             if (!isUpdated)
-            {
-                return new BaseResponse<bool>()
+                return new BaseResponse<bool>
                 {
                     Description = "Error updating new currency.",
                     StatusCode = StatusCode.BadRequest,
                     Data = false
                 };
-            }
 
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = "Success.",
                 StatusCode = StatusCode.OK,
@@ -194,7 +187,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
         catch (Exception ex)
         {
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = $"[Update] : {ex.Message}",
                 StatusCode = StatusCode.InternalServerError,
@@ -208,30 +201,26 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         try
         {
             var currency = await currencyRepository.GetByIdAsync(id);
-            
+
             if (currency == null)
-            {
-                return new BaseResponse<bool>()
+                return new BaseResponse<bool>
                 {
                     Description = "Currency not found.",
                     StatusCode = StatusCode.NotFound,
                     Data = false
                 };
-            }
-            
+
             var isDeleted = await currencyRepository.DeleteAsync(currency);
-            
+
             if (!isDeleted)
-            {
-                return new BaseResponse<bool>()
+                return new BaseResponse<bool>
                 {
                     Description = "Error deleting currency.",
                     StatusCode = StatusCode.BadRequest,
                     Data = false
                 };
-            }
 
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = "Success.",
                 StatusCode = StatusCode.OK,
@@ -240,7 +229,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
         catch (Exception ex)
         {
-            return new BaseResponse<bool>()
+            return new BaseResponse<bool>
             {
                 Description = $"[Delete] : {ex.Message}",
                 StatusCode = StatusCode.InternalServerError,

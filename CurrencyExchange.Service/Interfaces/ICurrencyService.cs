@@ -1,6 +1,4 @@
-﻿using CurrencyExchange.DAL.DAO.DTOs.Currency;
-using CurrencyExchange.Domain.Entity;
-using CurrencyExchange.Domain.Response;
+﻿using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
 
 namespace CurrencyExchange.Service.Interfaces;
