@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurencyExchange.ConsoleApp", "CurencyExchange.ConsoleApp\CurencyExchange.ConsoleApp.csproj", "{62C0573C-7E8A-463D-99CC-43EE976FCABB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.DAL", "CurrencyExchange.DAL\CurrencyExchange.DAL.csproj", "{F169415F-D22E-4FE7-8FC3-31CB6D411F1E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.Domain", "CurrencyExchange.Domain\CurrencyExchange.Domain.csproj", "{24824332-2850-4C53-A7A9-B46BD104CA11}"
@@ -10,16 +8,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.DTOs", "Cu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyExchange.Service", "CurrencyExchange.Service\CurrencyExchange.Service.csproj", "{BD6C3EED-38ED-474C-9ABA-076759334F2C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{2056E391-0C14-45E5-BAEB-E13B12D970E3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D8B671E1-6969-4CB0-B677-4FFCE91A0CCC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{62C0573C-7E8A-463D-99CC-43EE976FCABB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62C0573C-7E8A-463D-99CC-43EE976FCABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62C0573C-7E8A-463D-99CC-43EE976FCABB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62C0573C-7E8A-463D-99CC-43EE976FCABB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F169415F-D22E-4FE7-8FC3-31CB6D411F1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F169415F-D22E-4FE7-8FC3-31CB6D411F1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F169415F-D22E-4FE7-8FC3-31CB6D411F1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
