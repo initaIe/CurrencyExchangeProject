@@ -27,7 +27,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         return affectedRows > 0;
     }
 
-    public async Task<GetCurrencyDTO> GetByIdAsync(int id)
+    public async Task<GetCurrencyDTO?> GetByIdAsync(int id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -36,7 +36,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Id", id)
         };
 
-        return await dbHelper.QuerySingleAsync(
+        return await dbHelper.QuerySingleOrDefaultAsync(
             commandText,
             reader => new GetCurrencyDTO
             {

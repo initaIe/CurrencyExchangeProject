@@ -34,7 +34,7 @@ public class ExchangeRateDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Id", id)
         };
 
-        return await dbHelper.QuerySingleAsync(
+        return await dbHelper.QuerySingleOrDefaultAsync(
             commandText,
             reader => new GetExchangeRateDTO
             {

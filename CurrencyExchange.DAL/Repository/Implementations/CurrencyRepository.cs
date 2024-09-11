@@ -19,10 +19,13 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
         return await currencyDAO.CreateAsync(dto);
     }
 
-    public async Task<Currency> GetByIdAsync(int id)
+    public async Task<Currency?> GetByIdAsync(int id)
     {
         var dto = await currencyDAO.GetByIdAsync(id);
 
+        if (dto == null)
+            return null;
+        
         var result = new Currency
         {
             Id = dto.Id,
@@ -37,7 +40,7 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
     public async Task<IEnumerable<Currency>> GetAllAsync()
     {
         var dtoList = await currencyDAO.GetAllAsync();
-
+        
         return dtoList.Select(dto => new Currency
         {
             Id = dto.Id,
@@ -50,7 +53,7 @@ public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, Upda
     public async Task<IEnumerable<Currency>> GetAllAsync(int pageSize, int pageNumber)
     {
         var dtoList = await currencyDAO.GetAllAsync(pageSize, pageNumber);
-
+        
         return dtoList.Select(dto => new Currency
         {
             Id = dto.Id,

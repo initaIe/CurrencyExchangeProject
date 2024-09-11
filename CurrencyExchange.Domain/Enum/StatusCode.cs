@@ -11,5 +11,5 @@ public enum StatusCode
     // Такой эелемент уже существует.
     Conflict = 409,
     // Ошибка (например, база данных недоступна).
-    IternalServerError = 500,
+    InternalServerError = 500,
 }
