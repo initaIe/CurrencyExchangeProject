@@ -1,9 +1,7 @@
 using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DAO.DTOs.Currency;
+using CurrencyExchange.DAL.DAO.DAOs.Currency;
 using CurrencyExchange.DAL.DAO.Implementations;
 using CurrencyExchange.DAL.DAO.Interfaces;
-using CurrencyExchange.DAL.Repository.Implementations;
-using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Service.Implementations;
 using CurrencyExchange.Service.Interfaces;
@@ -22,10 +20,10 @@ builder.Services.AddSingleton<DataBaseHelper>(provider =>
 });
 
 // Регистрация CurrencyDAO как реализации интерфейса IBaseDAO
-builder.Services.AddScoped<IBaseDAO<CurrencyDAO, GetCurrencyDTO, UpdateCurrencyDTO>, CurrencyDAOImpl>();
+builder.Services.AddScoped<IBaseDAO<CurrencyDAO, GetCurrencyDTO, UpdateCurrencyDTO>, CurrencyDAO>();
 
 // Регистрация CurrencyRepository как реализации интерфейса IBaseRepository
-builder.Services.AddScoped<IBaseRepository<Currency>, CurrencyRepository>();
+builder.Services.AddScoped<IBaseDAO<Currency>, CurrencyDAO>();
 
 // Регистрация CurrencyService как реализации интерфейса ICurrencyService
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();

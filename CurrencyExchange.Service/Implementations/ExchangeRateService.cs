@@ -1,6 +1,5 @@
-﻿using CurrencyExchange.DAL.Repository.Interfaces;
+﻿using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.Domain.Entities;
-using CurrencyExchange.Domain.Entity;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
@@ -8,13 +7,13 @@ using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepository) : IExchangeRateService
+public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExchangeRateService
 {
     public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync()
     {
         try
         {
-            var exchangeRates = await exchangeRateRepository.GetAllAsync();
+            var exchangeRates = await exchangeRateDAO.GetAll();
 
             var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
             {
@@ -57,7 +56,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
     {
         try
         {
-            var exchangeRates = await exchangeRateRepository.GetAllAsync(pageSize, pageNumber);
+            var exchangeRates = await exchangeRateDAO.GetAll(pageSize, pageNumber);
 
             var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
             {
@@ -100,7 +99,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
     {
         try
         {
-            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+            var exchangeRate = await exchangeRateDAO.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<ExchangeRateDTO>
@@ -169,7 +168,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
                 Rate = dto.Rate
             };
 
-            var isCreated = await exchangeRateRepository.CreateAsync(exchangeRate);
+            var isCreated = await exchangeRateDAO.Create(exchangeRate);
 
             if (!isCreated)
                 return new BaseResponse<bool>
@@ -201,7 +200,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
     {
         try
         {
-            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+            var exchangeRate = await exchangeRateDAO.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<bool>
@@ -229,7 +228,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
                 exchangeRate.Rate = dto.Rate;
             }
 
-            var isUpdated = await exchangeRateRepository.UpdateAsync(exchangeRate);
+            var isUpdated = await exchangeRateDAO.Update(exchangeRate);
 
             if (!isUpdated)
                 return new BaseResponse<bool>
@@ -261,7 +260,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
     {
         try
         {
-            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+            var exchangeRate = await exchangeRateDAO.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<bool>
@@ -271,7 +270,7 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
                     Data = false
                 };
 
-            var isDeleted = await exchangeRateRepository.DeleteAsync(exchangeRate);
+            var isDeleted = await exchangeRateDAO.Delete(exchangeRate);
 
             if (!isDeleted)
                 return new BaseResponse<bool>

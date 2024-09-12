@@ -1,8 +1,8 @@
-﻿namespace CurrencyExchange.DAL.DAO.DTOs.Currency;
+﻿namespace CurrencyExchange.DAL.DTOs;
 
-public record CurrencyDAO
+public class CurrencyDTO
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } 
     public string Code { get; set; } 
     public string FullName { get; set; } 
     public string Sign { get; set; } 

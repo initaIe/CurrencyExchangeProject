@@ -14,8 +14,4 @@
         <ProjectReference Include="..\CurrencyExchange.Domain\CurrencyExchange.Domain.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="DAO\DAOs\" />
-    </ItemGroup>
-
 </Project>

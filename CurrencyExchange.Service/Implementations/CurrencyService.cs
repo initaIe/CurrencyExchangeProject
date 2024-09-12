@@ -1,4 +1,4 @@
-﻿using CurrencyExchange.DAL.Repository.Interfaces;
+﻿using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
@@ -7,13 +7,13 @@ using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICurrencyService
+public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
 {
     public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync()
     {
         try
         {
-            var currencies = await currencyRepository.GetAllAsync();
+            var currencies = await currencyDAO.GetAll();
 
             var dto = currencies.Select(currency => new CurrencyDTO
             {
@@ -44,7 +44,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
     {
         try
         {
-            var currencies = await currencyRepository.GetAllAsync(pageSize, pageNumber);
+            var currencies = await currencyDAO.GetAll(pageSize, pageNumber);
 
             var dto = currencies.Select(currency => new CurrencyDTO
             {
@@ -75,7 +75,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
     {
         try
         {
-            var currency = await currencyRepository.GetByIdAsync(id);
+            var currency = await currencyDAO.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<CurrencyDTO>
@@ -120,7 +120,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
                 Sign = dto.Sign
             };
 
-            var isCreated = await currencyRepository.CreateAsync(currency);
+            var isCreated = await currencyDAO.Create(currency);
 
             if (!isCreated)
                 return new BaseResponse<bool>
@@ -152,7 +152,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
     {
         try
         {
-            var currency = await currencyRepository.GetByIdAsync(id);
+            var currency = await currencyDAO.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<bool>
@@ -168,7 +168,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
                 currency.Sign = dto.Sign;
             }
 
-            var isUpdated = await currencyRepository.UpdateAsync(currency);
+            var isUpdated = await currencyDAO.Update(currency);
 
             if (!isUpdated)
                 return new BaseResponse<bool>
@@ -200,7 +200,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
     {
         try
         {
-            var currency = await currencyRepository.GetByIdAsync(id);
+            var currency = await currencyDAO.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<bool>
@@ -210,7 +210,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
                     Data = false
                 };
 
-            var isDeleted = await currencyRepository.DeleteAsync(currency);
+            var isDeleted = await currencyDAO.Delete(currency);
 
             if (!isDeleted)
                 return new BaseResponse<bool>
