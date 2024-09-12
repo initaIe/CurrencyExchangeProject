@@ -1,5 +1,5 @@
 ﻿using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.Domain.Entity;
+using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
@@ -25,7 +25,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
 
             return new BaseResponse<IEnumerable<CurrencyDTO>>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 Data = dto,
                 StatusCode = StatusCode.OK
             };
@@ -34,7 +34,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<IEnumerable<CurrencyDTO>>
             {
-                Description = $"Internal Server Error: {ex.Message}",
+                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError
             };
         }
@@ -56,7 +56,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
 
             return new BaseResponse<IEnumerable<CurrencyDTO>>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 Data = dto,
                 StatusCode = StatusCode.OK
             };
@@ -65,7 +65,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<IEnumerable<CurrencyDTO>>
             {
-                Description = $"Internal Server Error: {ex.Message}",
+                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError
             };
         }
@@ -80,7 +80,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             if (currency == null)
                 return new BaseResponse<CurrencyDTO>
                 {
-                    Description = "Currency not found.",
+                    Message = new MessageText("Currency not found"),
                     StatusCode = StatusCode.NotFound
                 };
 
@@ -94,7 +94,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
 
             return new BaseResponse<CurrencyDTO>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 StatusCode = StatusCode.OK,
                 Data = dto
             };
@@ -103,7 +103,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<CurrencyDTO>
             {
-                Description = $"[GetCurrencyDTO] : {ex.Message}",
+                Message = new MessageText($"[GetCurrencyById] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError
             };
         }
@@ -125,14 +125,14 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             if (!isCreated)
                 return new BaseResponse<bool>
                 {
-                    Description = "Error creating new currency.",
+                    Message = new MessageText("Error creating new currency"),
                     StatusCode = StatusCode.Conflict,
                     Data = false
                 };
 
             return new BaseResponse<bool>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 StatusCode = StatusCode.OK,
                 Data = true
             };
@@ -141,23 +141,23 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<bool>
             {
-                Description = $"[Create] : {ex.Message}",
+                Message = new MessageText($"[CreateCurrency] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError,
                 Data = false
             };
         }
     }
 
-    public async Task<BaseResponse<bool>> UpdateCurrencyAsync(CurrencyDTO dto)
+    public async Task<BaseResponse<bool>> UpdateCurrencyAsync(int id, CurrencyDTO dto)
     {
         try
         {
-            var currency = await currencyRepository.GetByIdAsync(dto.Id);
+            var currency = await currencyRepository.GetByIdAsync(id);
 
             if (currency == null)
                 return new BaseResponse<bool>
                 {
-                    Description = "The currency that should be updated was not found.",
+                    Message = new MessageText("The currency that should be updated was not found"),
                     StatusCode = StatusCode.NotFound,
                     Data = false
                 };
@@ -173,14 +173,14 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             if (!isUpdated)
                 return new BaseResponse<bool>
                 {
-                    Description = "Error updating new currency.",
+                    Message = new MessageText("Error updating new currency"),
                     StatusCode = StatusCode.BadRequest,
                     Data = false
                 };
 
             return new BaseResponse<bool>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 StatusCode = StatusCode.OK,
                 Data = true
             };
@@ -189,7 +189,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<bool>
             {
-                Description = $"[Update] : {ex.Message}",
+                Message = new MessageText($"[UpdateCurrency] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError,
                 Data = false
             };
@@ -205,7 +205,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             if (currency == null)
                 return new BaseResponse<bool>
                 {
-                    Description = "Currency not found.",
+                    Message = new MessageText("Currency not found"),
                     StatusCode = StatusCode.NotFound,
                     Data = false
                 };
@@ -215,14 +215,14 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
             if (!isDeleted)
                 return new BaseResponse<bool>
                 {
-                    Description = "Error deleting currency.",
+                    Message = new MessageText("Error deleting currency"),
                     StatusCode = StatusCode.BadRequest,
                     Data = false
                 };
 
             return new BaseResponse<bool>
             {
-                Description = "Success.",
+                Message = new MessageText("Success"),
                 StatusCode = StatusCode.OK,
                 Data = true
             };
@@ -231,7 +231,7 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         {
             return new BaseResponse<bool>
             {
-                Description = $"[Delete] : {ex.Message}",
+                Message = new MessageText($"[DeleteCurrency] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError,
                 Data = false
             };

@@ -1,40 +1,301 @@
-﻿using CurrencyExchange.DAL.DAO.DTOs.ExchangeRate;
-using CurrencyExchange.DAL.Repository.Interfaces;
+﻿using CurrencyExchange.DAL.Repository.Interfaces;
+using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Entity;
+using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
+using CurrencyExchange.Service.DTOs;
 using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
 public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepository) : IExchangeRateService
 {
-    public async Task<BaseResponse<IEnumerable<GetExchangeRateDTO>>> GetExchangeRatesAsync()
+    public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRates = await exchangeRateRepository.GetAllAsync();
+
+            var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
+            {
+                Id = exchangeRate.Id,
+                BaseCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.BaseCurrency.Id,
+                    FullName = exchangeRate.BaseCurrency.FullName,
+                    Code = exchangeRate.BaseCurrency.Code,
+                    Sign = exchangeRate.BaseCurrency.Sign
+                },
+                TargetCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.TargetCurrency.Id,
+                    FullName = exchangeRate.TargetCurrency.FullName,
+                    Code = exchangeRate.TargetCurrency.Code,
+                    Sign = exchangeRate.TargetCurrency.Sign
+                },
+                Rate = exchangeRate.Rate
+            });
+
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText("Success"),
+                Data = dto,
+                StatusCode = StatusCode.OK
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText($"[GetExchangeRates]: {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
+            };
+        }
     }
 
-    public async Task<BaseResponse<IEnumerable<GetExchangeRateDTO>>> GetExchangeRatesAsync(int pageSize, int pageNumber)
+    public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRates = await exchangeRateRepository.GetAllAsync(pageSize, pageNumber);
+
+            var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
+            {
+                Id = exchangeRate.Id,
+                BaseCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.BaseCurrency.Id,
+                    FullName = exchangeRate.BaseCurrency.FullName,
+                    Code = exchangeRate.BaseCurrency.Code,
+                    Sign = exchangeRate.BaseCurrency.Sign
+                },
+                TargetCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.TargetCurrency.Id,
+                    FullName = exchangeRate.TargetCurrency.FullName,
+                    Code = exchangeRate.TargetCurrency.Code,
+                    Sign = exchangeRate.TargetCurrency.Sign
+                },
+                Rate = exchangeRate.Rate
+            });
+
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText("Success"),
+                Data = dto,
+                StatusCode = StatusCode.OK
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText($"[GetExchangeRates]: {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
+            };
+        }
     }
 
-    public async Task<BaseResponse<GetExchangeRateDTO>> GetExchangeRateByIdAsync(int id)
+    public async Task<BaseResponse<ExchangeRateDTO>> GetCurrencyByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+
+            if (exchangeRate == null)
+                return new BaseResponse<ExchangeRateDTO>
+                {
+                    Message = new MessageText("ExchangeRate not found"),
+                    StatusCode = StatusCode.NotFound
+                };
+
+            var dto = new ExchangeRateDTO
+            {
+                Id = exchangeRate.Id,
+                BaseCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.BaseCurrency.Id,
+                    FullName = exchangeRate.BaseCurrency.FullName,
+                    Code = exchangeRate.BaseCurrency.Code,
+                    Sign = exchangeRate.BaseCurrency.Sign
+                },
+                TargetCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.TargetCurrency.Id,
+                    FullName = exchangeRate.TargetCurrency.FullName,
+                    Code = exchangeRate.TargetCurrency.Code,
+                    Sign = exchangeRate.TargetCurrency.Sign
+                },
+                Rate = exchangeRate.Rate
+            };
+
+            return new BaseResponse<ExchangeRateDTO>
+            {
+                Message = new MessageText("Success"),
+                StatusCode = StatusCode.OK,
+                Data = dto
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<ExchangeRateDTO>
+            {
+                Message = new MessageText($"[GetExchangeRateBytId] : {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
+            };
+        }
     }
 
-    public async Task<BaseResponse<bool>> CreateExchangeRateAsync(CreateExchangeRateDTO dto)
+    public async Task<BaseResponse<bool>> CreateCurrencyAsync(ExchangeRateDTO dto)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRate = new ExchangeRate
+            {
+                BaseCurrency = new Currency
+                {
+                    Id = dto.BaseCurrency.Id,
+                    Code = dto.BaseCurrency.Code,
+                    FullName = dto.BaseCurrency.FullName,
+                    Sign = dto.BaseCurrency.Sign
+                },
+                TargetCurrency = new Currency
+                {
+                    Id = dto.TargetCurrency.Id,
+                    Code = dto.TargetCurrency.Code,
+                    FullName = dto.TargetCurrency.FullName,
+                    Sign = dto.TargetCurrency.Sign
+                },
+                Rate = dto.Rate
+            };
+
+            var isCreated = await exchangeRateRepository.CreateAsync(exchangeRate);
+
+            if (!isCreated)
+                return new BaseResponse<bool>
+                {
+                    Message = new MessageText("Error creating new exchangeRate"),
+                    StatusCode = StatusCode.Conflict,
+                    Data = false
+                };
+
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText("Success"),
+                StatusCode = StatusCode.OK,
+                Data = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText($"[CreateExchangeRate] : {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError,
+                Data = false
+            };
+        }
     }
 
-    public async Task<BaseResponse<bool>> UpdateExchangeRateAsync(UpdateExchangeRateDTO dto)
+    public async Task<BaseResponse<bool>> UpdateCurrencyAsync(int id, ExchangeRateDTO dto)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+
+            if (exchangeRate == null)
+                return new BaseResponse<bool>
+                {
+                    Message = new MessageText("The exchange rate that should be updated was not found"),
+                    StatusCode = StatusCode.NotFound,
+                    Data = false
+                };
+
+            {
+                exchangeRate.BaseCurrency = new Currency
+                {
+                    Id = dto.BaseCurrency.Id,
+                    Code = dto.BaseCurrency.Code,
+                    FullName = dto.BaseCurrency.FullName,
+                    Sign = dto.BaseCurrency.Sign
+                };
+                exchangeRate.TargetCurrency = new Currency
+                {
+                    Id = dto.TargetCurrency.Id,
+                    Code = dto.TargetCurrency.Code,
+                    FullName = dto.TargetCurrency.FullName,
+                    Sign = dto.TargetCurrency.Sign
+                };
+                exchangeRate.Rate = dto.Rate;
+            }
+
+            var isUpdated = await exchangeRateRepository.UpdateAsync(exchangeRate);
+
+            if (!isUpdated)
+                return new BaseResponse<bool>
+                {
+                    Message = new MessageText("Error updating new exchangeRate"),
+                    StatusCode = StatusCode.BadRequest,
+                    Data = false
+                };
+
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText("Success"),
+                StatusCode = StatusCode.OK,
+                Data = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText($"[UpdateExchangeRate] : {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError,
+                Data = false
+            };
+        }
     }
 
-    public async Task<BaseResponse<bool>> DeleteExchangeRateAsync(int id)
+    public async Task<BaseResponse<bool>> DeleteCurrencyAsync(int id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var exchangeRate = await exchangeRateRepository.GetByIdAsync(id);
+
+            if (exchangeRate == null)
+                return new BaseResponse<bool>
+                {
+                    Message = new MessageText("Exchange rate not found"),
+                    StatusCode = StatusCode.NotFound,
+                    Data = false
+                };
+
+            var isDeleted = await exchangeRateRepository.DeleteAsync(exchangeRate);
+
+            if (!isDeleted)
+                return new BaseResponse<bool>
+                {
+                    Message = new MessageText("Error deleting exchange rate"),
+                    StatusCode = StatusCode.BadRequest,
+                    Data = false
+                };
+
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText("Success"),
+                StatusCode = StatusCode.OK,
+                Data = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<bool>
+            {
+                Message = new MessageText($"[DeleteExchangeRate] : {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError,
+                Data = false
+            };
+        }
     }
 }

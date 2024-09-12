@@ -5,16 +5,17 @@ using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.DAO.Implementations;
 
-public class CurrencyDAO(DataBaseHelper dbHelper)
-    : IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, UpdateCurrencyDTO>
+public class CurrencyDAOImpl(DataBaseHelper dbHelper)
+    : IBaseDAO<CurrencyDAO>
 {
-    public async Task<bool> CreateAsync(CreateCurrencyDTO entity)
+    public async Task<bool> CreateAsync(CurrencyDAO entity)
     {
-        var commandText = "INSERT INTO Currencies (Code, FullName, Sign) " +
-                          "VALUES (@Code, @FullName, @Sign);";
+        var commandText = "INSERT INTO Currencies (Id, Code, FullName, Sign) " +
+                          "VALUES (@Id, @Code, @FullName, @Sign);";
 
         var parameters = new[]
         {
+            new SqliteParameter("@Id", entity.Id),
             new SqliteParameter("@Code", entity.Code),
             new SqliteParameter("@FullName", entity.FullName),
             new SqliteParameter("@Sign", entity.Sign)
@@ -25,7 +26,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         return affectedRows > 0;
     }
 
-    public async Task<GetCurrencyDTO?> GetByIdAsync(int id)
+    public async Task<CurrencyDAO?> GetByIdAsync(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -36,9 +37,9 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
 
         return await dbHelper.QuerySingleOrDefaultAsync(
             commandText,
-            reader => new GetCurrencyDTO
+            reader => new CurrencyDAO
             {
-                Id = reader.GetInt32(0),
+                Id = reader.GetGuid(0),
                 Code = reader.GetString(1),
                 FullName = reader.GetString(2),
                 Sign = reader.GetString(3)
@@ -47,15 +48,15 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         );
     }
 
-    public async Task<IEnumerable<GetCurrencyDTO>> GetAllAsync()
+    public async Task<IEnumerable<CurrencyDAO>> GetAllAsync()
     {
         var commandText = "SELECT * FROM Currencies;";
 
         return await dbHelper.QueryAsync(
             commandText,
-            reader => new GetCurrencyDTO
+            reader => new CurrencyDAO
             {
-                Id = reader.GetInt32(0),
+                Id = reader.GetGuid(0),
                 Code = reader.GetString(1),
                 FullName = reader.GetString(2),
                 Sign = reader.GetString(3)
@@ -63,7 +64,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         );
     }
 
-    public async Task<IEnumerable<GetCurrencyDTO>> GetAllAsync(int pageSize, int pageNumber)
+    public async Task<IEnumerable<CurrencyDAO>> GetAllAsync(int pageSize, int pageNumber)
     {
         var offset = (pageNumber - 1) * pageSize;
 
@@ -77,9 +78,9 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
 
         return await dbHelper.QueryAsync(
             commandText,
-            reader => new GetCurrencyDTO
+            reader => new CurrencyDAO
             {
-                Id = reader.GetInt32(0),
+                Id = reader.GetGuid(0),
                 Code = reader.GetString(1),
                 FullName = reader.GetString(2),
                 Sign = reader.GetString(3)
@@ -88,7 +89,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         );
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
         var commandText = "DELETE FROM Currencies " +
                           "WHERE Id=@Id;";
@@ -103,7 +104,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         return affectedRows > 0;
     }
 
-    public async Task<bool> UpdateAsync(UpdateCurrencyDTO entity)
+    public async Task<bool> UpdateAsync(CurrencyDAO entity)
     {
         var commandText = "UPDATE Currencies " +
                           "SET Code = @Code, " +

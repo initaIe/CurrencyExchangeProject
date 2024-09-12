@@ -5,10 +5,10 @@ using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.DAO.Implementations;
 
-public class ExchangeRateDAO(DataBaseHelper dbHelper)
-    : IBaseDAO<CreateExchangeRateDTO, GetExchangeRateDTO, UpdateExchangeRateDTO>
+public class ExchangeRateDAOImpl(DataBaseHelper dbHelper)
+    : IBaseDAO<ExchangeRateDAO, GetExchangeRateDTO, UpdateExchangeRateDTO>
 {
-    public async Task<bool> CreateAsync(CreateExchangeRateDTO entity)
+    public async Task<bool> CreateAsync(ExchangeRateDAO entity)
     {
         var commandText = "INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate) " +
                           "VALUES (@BaseCurrencyId, @TargetCurrencyId, @Rate);";
@@ -25,7 +25,7 @@ public class ExchangeRateDAO(DataBaseHelper dbHelper)
         return affectedRows > 0;
     }
 
-    public async Task<GetExchangeRateDTO> GetByIdAsync(int id)
+    public async Task<GetExchangeRateDTO?> GetByIdAsync(int id)
     {
         var commandText = "SELECT * FROM ExchangeRates WHERE Id = @Id;";
 

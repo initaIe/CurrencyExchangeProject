@@ -1,16 +1,16 @@
 ﻿using CurrencyExchange.DAL.DAO.DTOs.Currency;
 using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.Domain.Entity;
+using CurrencyExchange.Domain.Entities;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
-public class CurrencyRepository(IBaseDAO<CreateCurrencyDTO, GetCurrencyDTO, UpdateCurrencyDTO> currencyDAO)
+public class CurrencyRepository(IBaseDAO<CurrencyDAO, GetCurrencyDTO, UpdateCurrencyDTO> currencyDAO)
     : IBaseRepository<Currency>
 {
     public async Task<bool> CreateAsync(Currency entity)
     {
-        var dto = new CreateCurrencyDTO
+        var dto = new CurrencyDAO
         {
             Code = entity.Code,
             FullName = entity.FullName,

@@ -1,18 +1,19 @@
 ﻿using CurrencyExchange.DAL.DAO.DTOs.ExchangeRate;
 using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.Repository.Interfaces;
+using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Entity;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class ExchangeRateRepository(
-    IBaseDAO<CreateExchangeRateDTO, GetExchangeRateDTO, UpdateExchangeRateDTO> exchangeRateDAO,
+    IBaseDAO<ExchangeRateDAO, GetExchangeRateDTO, UpdateExchangeRateDTO> exchangeRateDAO,
     IBaseRepository<Currency> currencyRepository)
     : IBaseRepository<ExchangeRate>
 {
     public async Task<bool> CreateAsync(ExchangeRate entity)
     {
-        var dto = new CreateExchangeRateDTO
+        var dto = new ExchangeRateDAO
         {
             BaseCurrencyId = entity.BaseCurrency.Id,
             TargetCurrencyId = entity.TargetCurrency.Id,

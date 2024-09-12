@@ -1,4 +1,6 @@
-﻿namespace CurrencyExchange.Domain.Entity;
+﻿using CurrencyExchange.Domain.Entities;
+
+namespace CurrencyExchange.Domain.Entity;
 
 public class ExchangeRate
 {

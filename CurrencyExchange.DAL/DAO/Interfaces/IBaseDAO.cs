@@ -1,11 +1,11 @@
 ﻿namespace CurrencyExchange.DAL.DAO.Interfaces;
 
-public interface IBaseDAO<in TCreationDTO, TGetDTO, in TUpdateDTO>
+public interface IBaseDAO<TDAOEntity>
 {
-    Task<bool> CreateAsync(TCreationDTO entity);
-    Task<TGetDTO?> GetByIdAsync(int id);
-    Task<IEnumerable<TGetDTO>> GetAllAsync();
-    Task<IEnumerable<TGetDTO>> GetAllAsync(int pageSize, int page);
-    Task<bool> DeleteAsync(int id);
-    Task<bool> UpdateAsync(TUpdateDTO entity);
+    Task<bool> CreateAsync(TDAOEntity entity);
+    Task<TDAOEntity?> GetByIdAsync(Guid id);
+    Task<IEnumerable<TDAOEntity>> GetAllAsync();
+    Task<IEnumerable<TDAOEntity>> GetAllAsync(int pageSize, int page);
+    Task<bool> DeleteAsync(Guid id);
+    Task<bool> UpdateAsync(TDAOEntity entity);
 }
