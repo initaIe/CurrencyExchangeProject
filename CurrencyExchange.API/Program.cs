@@ -13,17 +13,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-builder.Services.AddSingleton<DataBaseHelper>(provider =>
+builder.Services.AddSingleton<DataBase>(provider =>
 {
     var connectionString = provider.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection");
-    return new DataBaseHelper(connectionString!);
+    return new DataBase(connectionString!);
 });
 
 // Регистрация CurrencyDAO как реализации интерфейса IBaseDAO
-builder.Services.AddScoped<IBaseDAO<CurrencyDAO, GetCurrencyDTO, UpdateCurrencyDTO>, CurrencyDAO>();
+builder.Services.AddScoped<IBaseRepository<>, CurrencyRepository>();
 
 // Регистрация CurrencyRepository как реализации интерфейса IBaseRepository
-builder.Services.AddScoped<IBaseDAO<Currency>, CurrencyDAO>();
+builder.Services.AddScoped<IBaseRepository<Currency>, CurrencyRepository>();
 
 // Регистрация CurrencyService как реализации интерфейса ICurrencyService
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();

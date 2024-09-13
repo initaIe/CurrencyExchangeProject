@@ -7,13 +7,13 @@ using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExchangeRateService
+public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepository) : IExchangeRateService
 {
     public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync()
     {
         try
         {
-            var exchangeRates = await exchangeRateDAO.GetAll();
+            var exchangeRates = await exchangeRateRepository.GetAll();
 
             var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
             {
@@ -56,7 +56,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
     {
         try
         {
-            var exchangeRates = await exchangeRateDAO.GetAll(pageSize, pageNumber);
+            var exchangeRates = await exchangeRateRepository.GetAll(pageSize, pageNumber);
 
             var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
             {
@@ -99,7 +99,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
     {
         try
         {
-            var exchangeRate = await exchangeRateDAO.GetById(id);
+            var exchangeRate = await exchangeRateRepository.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<ExchangeRateDTO>
@@ -168,7 +168,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
                 Rate = dto.Rate
             };
 
-            var isCreated = await exchangeRateDAO.Create(exchangeRate);
+            var isCreated = await exchangeRateRepository.Create(exchangeRate);
 
             if (!isCreated)
                 return new BaseResponse<bool>
@@ -181,7 +181,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
             return new BaseResponse<bool>
             {
                 Message = new MessageText("Success"),
-                StatusCode = StatusCode.OK,
+                StatusCode = StatusCode.Created,
                 Data = true
             };
         }
@@ -200,7 +200,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
     {
         try
         {
-            var exchangeRate = await exchangeRateDAO.GetById(id);
+            var exchangeRate = await exchangeRateRepository.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<bool>
@@ -228,7 +228,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
                 exchangeRate.Rate = dto.Rate;
             }
 
-            var isUpdated = await exchangeRateDAO.Update(exchangeRate);
+            var isUpdated = await exchangeRateRepository.Update(exchangeRate);
 
             if (!isUpdated)
                 return new BaseResponse<bool>
@@ -260,7 +260,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
     {
         try
         {
-            var exchangeRate = await exchangeRateDAO.GetById(id);
+            var exchangeRate = await exchangeRateRepository.GetById(id);
 
             if (exchangeRate == null)
                 return new BaseResponse<bool>
@@ -270,7 +270,7 @@ public class ExchangeRateService(IBaseDAO<ExchangeRate> exchangeRateDAO) : IExch
                     Data = false
                 };
 
-            var isDeleted = await exchangeRateDAO.Delete(exchangeRate);
+            var isDeleted = await exchangeRateRepository.Delete(exchangeRate);
 
             if (!isDeleted)
                 return new BaseResponse<bool>

@@ -5,10 +5,9 @@ namespace CurrencyExchange.Service.Interfaces;
 
 public interface ICurrencyService
 {
-    Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync();
-    Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber);
-    Task<BaseResponse<CurrencyDTO>> GetCurrencyByIdAsync(int id);
     Task<BaseResponse<bool>> CreateCurrencyAsync(CurrencyDTO dto);
+    Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync(int pageSize = 0, int pageNumber = 0);
+    Task<BaseResponse<CurrencyDTO>> GetCurrencyByIdAsync(int id);
     Task<BaseResponse<bool>> UpdateCurrencyAsync(int id, CurrencyDTO dto);
     Task<BaseResponse<bool>> DeleteCurrencyAsync(int id);
 }

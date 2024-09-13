@@ -2,14 +2,15 @@
 using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.DTOs;
 using CurrencyExchange.DAL.Result;
+using CurrencyExchange.Domain.Entities;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.DAO.Implementations;
 
-public class CurrencyDAO(DataBaseHelper dbHelper)
-    : IBaseDAO<CurrencyDTO>
+public class CurrencyRepository(DataBase db)
+    : IBaseRepository<Currency, CurrencyDTO>
 {
-    public async Task<IBaseResult<CurrencyDTO>> Create(CurrencyDTO dto)
+    public async Task<IBaseResult<Currency>> Create(CurrencyDTO dto)
     {
         var commandText = "INSERT INTO Currencies (Id, Code, FullName, Sign) " +
                           "VALUES (@Id, @Code, @FullName, @Sign);";
@@ -22,11 +23,11 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Sign", dto.Sign)
         };
 
-        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
+        var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isCreated = affectedRows > 0;
 
-        return new BaseResult<CurrencyDTO>
+        return new BaseResult<Currency>
         {
             IsSuccess = isCreated,
             Message = isCreated
@@ -35,7 +36,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         };
     }
 
-    public async Task<IBaseResult<CurrencyDTO>> GetById(Guid id)
+    public async Task<IBaseResult<Currency>> GetById(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -44,78 +45,88 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Id", id)
         };
 
-        var currency = await dbHelper.QuerySingleOrDefaultAsync(
+        var currencyCreationResult = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader => new CurrencyDTO
-            {
-                Id = reader.GetGuid(0),
-                Code = reader.GetString(1),
-                FullName = reader.GetString(2),
-                Sign = reader.GetString(3)
-            },
+            reader => Currency.Create(
+                reader.GetGuid(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)),
             parameters
         );
 
-        var isReceived = currency != null;
+        var isReceived = currencyCreationResult.currency != null;
 
-        return new BaseResult<CurrencyDTO>
+        return new BaseResult<Currency>
         {
             IsSuccess = isReceived,
             Message = isReceived
                 ? $"Currency with Id {id} was received"
-                : $"Currency with Id {id} was not received",
+                : $"Currency with Id {id} was not received. Currency creation error: [{currencyCreationResult.error}]",
             Data = isReceived
-                ? currency
+                ? currencyCreationResult.currency
                 : null
         };
     }
 
-    public async Task<IBaseResult<IEnumerable<CurrencyDTO>>> GetAll
-        (int entitiesLimit = 0, int entitiesOffset = 0)
+    public async Task<IBaseResult<IEnumerable<Currency>>> GetAll
+        (int limit = 0, int offset = 0)
     {
         var commandText = "SELECT * FROM Currencies";
         var parameters = Array.Empty<SqliteParameter>();
-        
-        if (entitiesLimit > 0 && entitiesOffset > 0)
+
+        if (limit > 0 && offset > 0)
         {
-            var offset = (entitiesOffset - 1) * entitiesLimit;
+            var currentOffset = (offset - 1) * limit;
             commandText += " LIMIT @Limit OFFSET @Offset";
 
             parameters = new[]
             {
-                new SqliteParameter("@Limit", entitiesLimit),
-                new SqliteParameter("@Offset", offset)
+                new SqliteParameter("@Limit", limit),
+                new SqliteParameter("@Offset", currentOffset)
             };
         }
 
-        var currencies = await dbHelper.QueryAsync(
+        var currenciesCreationResult = await db.QueryAsync(
             commandText,
-            reader => new CurrencyDTO
-            {
-                Id = reader.GetGuid(0),
-                Code = reader.GetString(1),
-                FullName = reader.GetString(2),
-                Sign = reader.GetString(3)
-            },
+            reader => Currency.Create(
+                reader.GetGuid(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)),
             parameters
         );
 
-        var currenciesList = currencies.ToList();
+        var currenciesList = currenciesCreationResult.ToList();
+
         var isReceived = currenciesList.Count > 0;
 
-        return new BaseResult<IEnumerable<CurrencyDTO>>
+        var errors = currenciesList
+            .Where(c => !string.IsNullOrEmpty(c.error))
+            .Select(c => c.error)
+            .ToList();
+
+        var validCurrencies = currenciesList
+            .Where(c => c.currency != null)
+            .Select(c => c.currency!)
+            .ToList();
+
+        var errorMessage = errors.Count > 0
+            ? $"Some currencies were not created due to errors: {string.Join("; ", errors)}"
+            : null;
+
+        return new BaseResult<IEnumerable<Currency>>
         {
-            IsSuccess = isReceived,
+            IsSuccess = isReceived && errors.Count == 0,
             Message = isReceived
-                ? $"Currencies was received"
-                : $"Currencies was not received",
-            Data = isReceived
-                ? currenciesList
-                : null
+                ? errorMessage
+                  ?? "All currencies were successfully received"
+                : "Not all currencies were received",
+            Data = validCurrencies.Count != 0 ? validCurrencies : null
         };
     }
 
-    public async Task<IBaseResult<CurrencyDTO>> Delete(Guid id)
+    public async Task<IBaseResult<Currency>> Delete(Guid id)
     {
         var commandText = "DELETE FROM Currencies " +
                           "WHERE Id=@Id;";
@@ -125,11 +136,11 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Id", id)
         };
 
-        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
+        var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isDeleted = affectedRows > 0;
 
-        return new BaseResult<CurrencyDTO>
+        return new BaseResult<Currency>
         {
             IsSuccess = isDeleted,
             Message = isDeleted
@@ -138,7 +149,7 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
         };
     }
 
-    public async Task<IBaseResult<CurrencyDTO>> Update(Guid id, CurrencyDTO dto)
+    public async Task<IBaseResult<Currency>> Update(Guid id, CurrencyDTO dto)
     {
         var commandText = "UPDATE Currencies " +
                           "SET Id = @NewId, " +
@@ -156,16 +167,16 @@ public class CurrencyDAO(DataBaseHelper dbHelper)
             new SqliteParameter("@Sign", dto.Sign)
         };
 
-        var affectedRows = await dbHelper.ExecuteAsync(commandText, parameters);
+        var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isUpdated = affectedRows > 0;
 
-        return new BaseResult<CurrencyDTO>
+        return new BaseResult<Currency>
         {
             IsSuccess = isUpdated,
             Message = isUpdated
-                ? $"Currency with new Id {dto.Id} has been created"
-                : $"Currency with old Id {id} has not been created"
+                ? $"Currency with Id {dto.Id} has been updated"
+                : $"Currency with Id {id} has not been updated"
         };
     }
 }

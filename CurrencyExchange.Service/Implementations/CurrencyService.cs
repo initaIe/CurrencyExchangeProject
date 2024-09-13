@@ -7,13 +7,13 @@ using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
+public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICurrencyService
 {
     public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync()
     {
         try
         {
-            var currencies = await currencyDAO.GetAll();
+            var currencies = await currencyRepository.GetAll();
 
             var dto = currencies.Select(currency => new CurrencyDTO
             {
@@ -44,7 +44,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
     {
         try
         {
-            var currencies = await currencyDAO.GetAll(pageSize, pageNumber);
+            var currencies = await currencyRepository.GetAll(pageSize, pageNumber);
 
             var dto = currencies.Select(currency => new CurrencyDTO
             {
@@ -75,7 +75,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
     {
         try
         {
-            var currency = await currencyDAO.GetById(id);
+            var currency = await currencyRepository.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<CurrencyDTO>
@@ -120,7 +120,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
                 Sign = dto.Sign
             };
 
-            var isCreated = await currencyDAO.Create(currency);
+            var isCreated = await currencyRepository.Create(currency);
 
             if (!isCreated)
                 return new BaseResponse<bool>
@@ -133,7 +133,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
             return new BaseResponse<bool>
             {
                 Message = new MessageText("Success"),
-                StatusCode = StatusCode.OK,
+                StatusCode = StatusCode.Created,
                 Data = true
             };
         }
@@ -152,7 +152,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
     {
         try
         {
-            var currency = await currencyDAO.GetById(id);
+            var currency = await currencyRepository.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<bool>
@@ -168,7 +168,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
                 currency.Sign = dto.Sign;
             }
 
-            var isUpdated = await currencyDAO.Update(currency);
+            var isUpdated = await currencyRepository.Update(currency);
 
             if (!isUpdated)
                 return new BaseResponse<bool>
@@ -200,7 +200,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
     {
         try
         {
-            var currency = await currencyDAO.GetById(id);
+            var currency = await currencyRepository.GetById(id);
 
             if (currency == null)
                 return new BaseResponse<bool>
@@ -210,7 +210,7 @@ public class CurrencyService(IBaseDAO<Currency> currencyDAO) : ICurrencyService
                     Data = false
                 };
 
-            var isDeleted = await currencyDAO.Delete(currency);
+            var isDeleted = await currencyRepository.Delete(currency);
 
             if (!isDeleted)
                 return new BaseResponse<bool>

@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.Commons;
 
-public class DataBaseHelper(string connectionString)
+public class DataBase(string connectionString)
 {
     private SqliteConnection CreateConnection()
     {
