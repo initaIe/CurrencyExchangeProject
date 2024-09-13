@@ -1,6 +1,6 @@
 ﻿using CurrencyExchange.DAL.Result;
 
-namespace CurrencyExchange.DAL.DAO.Interfaces;
+namespace CurrencyExchange.DAL.Repository.Interfaces;
 
 public interface IBaseRepository<TDomainEntity, TEntityDTO>
 {

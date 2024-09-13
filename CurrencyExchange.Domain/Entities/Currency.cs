@@ -5,7 +5,7 @@ public class Currency
     public const int MaxCodeLength = 3;
     public const int MaxFullNameLength = 50;
     public const int MaxSignLength = 10;
-    
+
     private Currency(Guid id, string code, string fullName, string sign)
     {
         Id = id;
@@ -13,7 +13,7 @@ public class Currency
         FullName = fullName;
         Sign = sign;
     }
-    
+
     public Guid Id { get; }
     public string Code { get; }
     public string FullName { get; }
@@ -37,9 +37,9 @@ public class Currency
             error += "Sign cannot be null, empty or larger than 10 symbols. ";
 
         if (!string.IsNullOrEmpty(error)) return (null, error);
-        
+
         var currency = new Currency(id, code, fullName, sign);
-        
+
         return (currency, error);
     }
 }

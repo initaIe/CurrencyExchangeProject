@@ -1,5 +1,4 @@
-﻿using System.Dynamic;
-using CurrencyExchange.Domain.Helpers;
+﻿using CurrencyExchange.Domain.Helpers;
 
 namespace CurrencyExchange.Domain.Entities;
 
@@ -33,9 +32,9 @@ public class ExchangeRate
             error += "Rate must have 6 numbers after comma";
 
         if (!string.IsNullOrEmpty(error)) return (null, error);
-        
+
         var exchangeRate = new ExchangeRate(id, baseCurrency, targetCurrency, rate);
-        
+
         return (exchangeRate, error);
     }
 }

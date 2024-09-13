@@ -1,11 +1,11 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.DTOs;
+using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.DAL.Result;
 using CurrencyExchange.Domain.Entities;
 using Microsoft.Data.Sqlite;
 
-namespace CurrencyExchange.DAL.DAO.Implementations;
+namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class CurrencyRepository(DataBase db)
     : IBaseRepository<Currency, CurrencyDTO>

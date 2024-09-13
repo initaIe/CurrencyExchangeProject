@@ -1,7 +1,5 @@
 using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DAO.DAOs.Currency;
-using CurrencyExchange.DAL.DAO.Implementations;
-using CurrencyExchange.DAL.DAO.Interfaces;
+using CurrencyExchange.DAL.Repository.Implementations;
 using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Service.Implementations;
 using CurrencyExchange.Service.Interfaces;

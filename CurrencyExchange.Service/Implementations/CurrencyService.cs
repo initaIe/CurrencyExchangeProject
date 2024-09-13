@@ -1,5 +1,4 @@
-﻿using CurrencyExchange.DAL.DAO.Interfaces;
-using CurrencyExchange.Domain.Entities;
+﻿using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
@@ -9,37 +8,6 @@ namespace CurrencyExchange.Service.Implementations;
 
 public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICurrencyService
 {
-    public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync()
-    {
-        try
-        {
-            var currencies = await currencyRepository.GetAll();
-
-            var dto = currencies.Select(currency => new CurrencyDTO
-            {
-                Id = currency.Id,
-                Code = currency.Code,
-                FullName = currency.FullName,
-                Sign = currency.Sign
-            });
-
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
-            {
-                Message = new MessageText("Success"),
-                Data = dto,
-                StatusCode = StatusCode.OK
-            };
-        }
-        catch (Exception ex)
-        {
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
-            {
-                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
-        }
-    }
-
     public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber)
     {
         try
@@ -234,6 +202,37 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
                 Message = new MessageText($"[DeleteCurrency] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError,
                 Data = false
+            };
+        }
+    }
+
+    public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync()
+    {
+        try
+        {
+            var currencies = await currencyRepository.GetAll();
+
+            var dto = currencies.Select(currency => new CurrencyDTO
+            {
+                Id = currency.Id,
+                Code = currency.Code,
+                FullName = currency.FullName,
+                Sign = currency.Sign
+            });
+
+            return new BaseResponse<IEnumerable<CurrencyDTO>>
+            {
+                Message = new MessageText("Success"),
+                Data = dto,
+                StatusCode = StatusCode.OK
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<IEnumerable<CurrencyDTO>>
+            {
+                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
             };
         }
     }

@@ -1,5 +1,4 @@
-﻿using CurrencyExchange.DAL.DAO.Interfaces;
-using CurrencyExchange.Domain.Entities;
+﻿using CurrencyExchange.Domain.Entities;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
@@ -9,49 +8,6 @@ namespace CurrencyExchange.Service.Implementations;
 
 public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepository) : IExchangeRateService
 {
-    public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync()
-    {
-        try
-        {
-            var exchangeRates = await exchangeRateRepository.GetAll();
-
-            var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
-            {
-                Id = exchangeRate.Id,
-                BaseCurrency = new CurrencyDTO
-                {
-                    Id = exchangeRate.BaseCurrency.Id,
-                    FullName = exchangeRate.BaseCurrency.FullName,
-                    Code = exchangeRate.BaseCurrency.Code,
-                    Sign = exchangeRate.BaseCurrency.Sign
-                },
-                TargetCurrency = new CurrencyDTO
-                {
-                    Id = exchangeRate.TargetCurrency.Id,
-                    FullName = exchangeRate.TargetCurrency.FullName,
-                    Code = exchangeRate.TargetCurrency.Code,
-                    Sign = exchangeRate.TargetCurrency.Sign
-                },
-                Rate = exchangeRate.Rate
-            });
-
-            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
-            {
-                Message = new MessageText("Success"),
-                Data = dto,
-                StatusCode = StatusCode.OK
-            };
-        }
-        catch (Exception ex)
-        {
-            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
-            {
-                Message = new MessageText($"[GetExchangeRates]: {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
-        }
-    }
-
     public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber)
     {
         try
@@ -294,6 +250,49 @@ public class ExchangeRateService(IBaseRepository<ExchangeRate> exchangeRateRepos
                 Message = new MessageText($"[DeleteExchangeRate] : {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError,
                 Data = false
+            };
+        }
+    }
+
+    public async Task<BaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync()
+    {
+        try
+        {
+            var exchangeRates = await exchangeRateRepository.GetAll();
+
+            var dto = exchangeRates.Select(exchangeRate => new ExchangeRateDTO
+            {
+                Id = exchangeRate.Id,
+                BaseCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.BaseCurrency.Id,
+                    FullName = exchangeRate.BaseCurrency.FullName,
+                    Code = exchangeRate.BaseCurrency.Code,
+                    Sign = exchangeRate.BaseCurrency.Sign
+                },
+                TargetCurrency = new CurrencyDTO
+                {
+                    Id = exchangeRate.TargetCurrency.Id,
+                    FullName = exchangeRate.TargetCurrency.FullName,
+                    Code = exchangeRate.TargetCurrency.Code,
+                    Sign = exchangeRate.TargetCurrency.Sign
+                },
+                Rate = exchangeRate.Rate
+            });
+
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText("Success"),
+                Data = dto,
+                StatusCode = StatusCode.OK
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<IEnumerable<ExchangeRateDTO>>
+            {
+                Message = new MessageText($"[GetExchangeRates]: {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
             };
         }
     }

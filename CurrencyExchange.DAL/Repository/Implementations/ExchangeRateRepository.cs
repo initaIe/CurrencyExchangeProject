@@ -1,11 +1,11 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DAO.Interfaces;
 using CurrencyExchange.DAL.DTOs;
+using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.DAL.Result;
 using CurrencyExchange.Domain.Entities;
 using Microsoft.Data.Sqlite;
 
-namespace CurrencyExchange.DAL.DAO.Implementations;
+namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class ExchangeRateRepository(DataBase db)
     : IBaseRepository<ExchangeRate, ExchangeRateDTO>
@@ -80,9 +80,7 @@ public class ExchangeRateRepository(DataBase db)
 
                 // Если одна из валют не создана, возвращаем null
                 if (baseCurrencyResult.currency == null || targetCurrencyResult.currency == null)
-                {
-                    return (null, baseCurrencyResult.error + targetCurrencyResult.error );
-                }
+                    return (null, baseCurrencyResult.error + targetCurrencyResult.error);
 
                 // Создаем ExchangeRate, если обе валюты валидны
                 return ExchangeRate.Create(
@@ -142,10 +140,8 @@ public class ExchangeRateRepository(DataBase db)
                     reader.GetString(9));
 
                 if (baseCurrencyResult.currency == null || targetCurrencyResult.currency == null)
-                {
-                    return (null, baseCurrencyResult.error + targetCurrencyResult.error );
-                }
-                
+                    return (null, baseCurrencyResult.error + targetCurrencyResult.error);
+
                 return ExchangeRate.Create(
                     reader.GetGuid(0),
                     baseCurrencyResult.currency,
