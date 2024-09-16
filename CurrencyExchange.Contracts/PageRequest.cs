@@ -2,10 +2,4 @@
 
 namespace CurrencyExchange.Contracts;
 
-public record PageRequest(int PageSize, int PageNumber)
-{
-   [DefaultValue(0)]
-   public int PageSize { get; init; } = PageSize;
-   [DefaultValue(0)]
-   public int PageNumber { get; init; } = PageNumber;
-}
+public record PageRequest(int Size = 0, int Number = 0);

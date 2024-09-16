@@ -1,7 +1,6 @@
 ﻿using CurrencyExchange.DAL.Commons;
 using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Result;
 using Microsoft.Data.Sqlite;
@@ -11,7 +10,7 @@ namespace CurrencyExchange.DAL.Repository.Implementations;
 public class CurrencyRepository(DataBase db)
     : ICurrencyRepository
 {
-    public async Task<IBaseResult<Currency>> Create(Currency currency)
+    public async Task<IResult<Currency>> Create(Currency currency)
     {
         var commandText = "INSERT INTO Currencies (Id, Code, FullName, Sign) " +
                           "VALUES (@Id, @Code, @FullName, @Sign);";
@@ -29,14 +28,11 @@ public class CurrencyRepository(DataBase db)
         var isCreated = affectedRows > 0;
 
         return isCreated
-            ? new BaseResult<Currency>(
-                operationStatus: OperationStatus.Created,
-                data: currency)
-            : new BaseResult<Currency>(
-                operationStatus: OperationStatus.Failed);
+            ? new Result<Currency>(currency)
+            : new Result<Currency>();
     }
 
-    public async Task<IBaseResult<CurrencyEntity>> GetById(Guid id)
+    public async Task<IResult<CurrencyEntity>> GetById(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -47,7 +43,7 @@ public class CurrencyRepository(DataBase db)
 
         var currencyEntity = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader => new CurrencyEntity()
+            reader => new CurrencyEntity
             {
                 Id = reader.GetString(0),
                 Code = reader.GetString(1),
@@ -60,14 +56,11 @@ public class CurrencyRepository(DataBase db)
         var isReceived = currencyEntity != null;
 
         return isReceived
-            ? new BaseResult<CurrencyEntity>(
-                operationStatus: OperationStatus.Received,
-                data: currencyEntity!)
-            : new BaseResult<CurrencyEntity>(
-                operationStatus: OperationStatus.Failed);
+            ? new Result<CurrencyEntity>(currencyEntity!)
+            : new Result<CurrencyEntity>();
     }
 
-    public async Task<IBaseResult<IEnumerable<CurrencyEntity>>> GetAll
+    public async Task<IResult<IEnumerable<CurrencyEntity>>> GetAll
         (int limit, int offset)
     {
         var commandText = "SELECT * FROM Currencies";
@@ -87,7 +80,7 @@ public class CurrencyRepository(DataBase db)
 
         var currencyEntities = await db.QueryAsync(
             commandText,
-            reader => new CurrencyEntity()
+            reader => new CurrencyEntity
             {
                 Id = reader.GetString(0),
                 Code = reader.GetString(1),
@@ -102,14 +95,11 @@ public class CurrencyRepository(DataBase db)
         var isReceived = currenciesList.Count > 0;
 
         return isReceived
-            ? new BaseResult<IEnumerable<CurrencyEntity>>(
-                operationStatus: OperationStatus.Received,
-                data: currenciesList)
-            : new BaseResult<IEnumerable<CurrencyEntity>>(
-                operationStatus: OperationStatus.Failed);
+            ? new Result<IEnumerable<CurrencyEntity>>(currenciesList)
+            : new Result<IEnumerable<CurrencyEntity>>();
     }
 
-    public async Task<IBaseResult<Guid>> Delete(Guid id)
+    public async Task<IResult<Guid>> Delete(Guid id)
     {
         var commandText = "DELETE FROM Currencies " +
                           "WHERE Id=@Id;";
@@ -124,20 +114,17 @@ public class CurrencyRepository(DataBase db)
         var isDeleted = affectedRows > 0;
 
         return isDeleted
-            ? new BaseResult<Guid>(
-                operationStatus: OperationStatus.Received,
-                data: id)
-            : new BaseResult<Guid>(
-                operationStatus: OperationStatus.Failed);
+            ? new Result<Guid>(id)
+            : new Result<Guid>();
     }
 
-    public async Task<IBaseResult<Currency>> Update(Currency currency)
+    public async Task<IResult<Currency>> Update(Guid id, Currency currency)
     {
         var commandText = "UPDATE Currencies " +
                           "SET Code = @Code, " +
                           "FullName = @FullName, " +
                           "Sign = @Sign " +
-                          "WHERE Id = @OldId;";
+                          "WHERE Id = @Id;";
 
         var parameters = new[]
         {
@@ -152,10 +139,7 @@ public class CurrencyRepository(DataBase db)
         var isUpdated = affectedRows > 0;
 
         return isUpdated
-            ? new BaseResult<Currency>(
-                operationStatus: OperationStatus.Updated,
-                data: currency)
-            : new BaseResult<Currency>(
-                operationStatus: OperationStatus.Failed);
+            ? new Result<Currency>(currency)
+            : new Result<Currency>();
     }
 }

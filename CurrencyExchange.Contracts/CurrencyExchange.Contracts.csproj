@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="ExchangeRate\" />
+        <Folder Include="ExchangeRate\"/>
     </ItemGroup>
 
 </Project>

@@ -1,10 +1,8 @@
-﻿using CurrencyExchange.Domain.Enums;
-
-namespace CurrencyExchange.Domain.Response;
+﻿namespace CurrencyExchange.Domain.Response.Interfaces;
 
 public interface IResponse
 {
     string Status { get; }
     string Message { get; }
-    StatusCode StatusCode { get; }
+    int StatusCode { get; }
 }

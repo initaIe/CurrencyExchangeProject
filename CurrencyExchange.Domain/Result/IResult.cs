@@ -1,10 +1,7 @@
-﻿using CurrencyExchange.Domain.Enums;
+﻿namespace CurrencyExchange.Domain.Result;
 
-namespace CurrencyExchange.Domain.Result;
-
-public interface IBaseResult<T>
+public interface IResult<T>
 {
     bool IsSuccess { get; }
-    OperationStatus Status { get; }
     T? Data { get; }
 }

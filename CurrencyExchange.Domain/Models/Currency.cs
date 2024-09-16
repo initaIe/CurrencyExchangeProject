@@ -19,27 +19,26 @@ public class Currency
     public string FullName { get; }
     public string Sign { get; }
 
-    public static (Currency? currency, string error) Create(Guid id, string code, string fullName, string sign)
+    public static (Currency? currency, List<string> errors) Create(Guid id, string code, string fullName, string sign)
     {
-        var error = string.Empty;
+        List<string> errors = [];
 
-        // TODO: write extension for Guid validation
         if (Guid.Empty.Equals(id))
-            error += "Id cannot be null or empty. ";
-
+            errors.Add("Guid Id cannot be empty");
+        
         if (string.IsNullOrEmpty(code) || code.Length > MaxCodeLength)
-            error += "Code cannot be null, empty or larger than 3 symbols. ";
+            errors.Add("Code cannot be null, empty or larger than 3 symbols");
 
         if (string.IsNullOrEmpty(fullName) || fullName.Length > MaxFullNameLength)
-            error += "FullName cannot be null, empty or larger than 50 symbols. ";
+            errors.Add("FullName cannot be null, empty or larger than 50 symbols");
 
         if (string.IsNullOrEmpty(sign) || sign.Length > MaxSignLength)
-            error += "Sign cannot be null, empty or larger than 10 symbols. ";
+            errors.Add("Sign cannot be null, empty or larger than 10 symbols");
 
-        if (!string.IsNullOrEmpty(error)) return (null, error);
+        if (errors.Count > 0) return (null, errors);
 
         var currency = new Currency(id, code, fullName, sign);
 
-        return (currency, error);
+        return (currency, errors);
     }
 }

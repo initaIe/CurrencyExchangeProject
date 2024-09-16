@@ -1,21 +1,22 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace CurrencyExchange.Domain.Enums;
 
 public enum OperationStatus
 {
-    [Description("The object has been successfully created")]
+    [Display(Name = "Created")] [Description("Successfully created")]
     Created,
-    
-    [Description("The object has been successfully received")]
+
+    [Display(Name = "Received")] [Description("Successfully received")]
     Received,
-    
-    [Description("The object has been successfully updated")]
+
+    [Display(Name = "Updated")] [Description("Successfully updated")]
     Updated,
-    
-    [Description("The object has been successfully deleted")]
+
+    [Display(Name = "Deleted")] [Description("Successfully deleted")]
     Deleted,
-    
-    [Description("The operation has failed")]
+
+    [Display(Name = "Failed")] [Description("Operation was failed")]
     Failed
 }

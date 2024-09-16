@@ -1,7 +1,6 @@
 using CurrencyExchange.DAL.Commons;
 using CurrencyExchange.DAL.Repository.Implementations;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Service.Implementations;
 using CurrencyExchange.Service.Interfaces;
 
@@ -19,10 +18,10 @@ builder.Services.AddSingleton<DataBase>(provider =>
 });
 
 builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
-builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+// builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
 
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
-builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
+// builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
 var app = builder.Build();
 

@@ -11,7 +11,7 @@ public static class EnumHelper
         var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));
         return attribute == null ? value.ToString() : attribute.Description;
     }
-    
+
     public static string GetEnumDisplayName(Enum value)
     {
         var field = value.GetType().GetField(value.ToString());

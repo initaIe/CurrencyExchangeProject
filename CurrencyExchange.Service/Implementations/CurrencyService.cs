@@ -1,11 +1,10 @@
 ﻿using CurrencyExchange.Contracts.Currency;
-using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Helpers;
 using CurrencyExchange.Domain.Models;
-using CurrencyExchange.Domain.Response;
-using CurrencyExchange.Service.DTOs;
+using CurrencyExchange.Domain.Response.Implementations;
+using CurrencyExchange.Domain.Response.Interfaces;
 using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
@@ -13,183 +12,171 @@ namespace CurrencyExchange.Service.Implementations;
 public class CurrencyService(ICurrencyRepository currencyRepository)
     : ICurrencyService
 {
-    public async Task<IBaseResponse<CurrencyDTO>> CreateCurrencyAsync(CreateCurrencyDTO dto)
+    public async Task<IResponse> CreateAsync(CreateCurrencyDTO dto)
     {
         try
         {
-            var modelCreationResult = Currency.Create
-                (Guid.NewGuid(), request.Code, request.FullName, request.Sign);
+            var domainResult = Currency.Create(Guid.NewGuid(), dto.Code, dto.FullName, dto.Sign);
 
+            if (domainResult.errors.Count > 0 || domainResult.currency == null)
+                return new FailedErrorResponse(
+                    (int)StatusCode.UnprocessableEntity,
+                    domainResult.errors);
 
-            if (!string.IsNullOrEmpty(modelCreationResult.error) || modelCreationResult.currency == null)
-                return new BaseResponse<CurrencyResponse>
-                {
-                    Message = new MessageText(modelCreationResult.error),
-                    StatusCode = StatusCode.BadRequest
-                };
+            var dbResult = await currencyRepository.Create(domainResult.currency);
 
-            var dbCreationResult = await currencyRepository.Create(modelCreationResult.currency);
+            if (!dbResult.IsSuccess || dbResult.Data == null)
+                return new FailedResponse(
+                    (int)StatusCode.Conflict
+                );
 
-            if (!dbCreationResult.IsSuccess || dbCreationResult.Data == null)
-                return new BaseResponse<CurrencyResponse>
-                {
-                    Message = new MessageText(EnumHelper.GetEnumDescription(dbCreationResult.Status)),
-                    StatusCode = StatusCode.Conflict
-                };
-
-            return new BaseResponse<CurrencyResponse>
-            {
-                Message = new MessageText(EnumHelper.GetEnumDescription(StatusCode.Created)),
-                StatusCode = StatusCode.Created,
-                Data = new CurrencyResponse(
-                    dbCreationResult.Data.Id,
-                    dbCreationResult.Data.Code,
-                    dbCreationResult.Data.FullName,
-                    dbCreationResult.Data.Sign)
-            };
+            return new SuccessDataResponse<CurrencyDTO>(
+                EnumHelper.GetEnumDisplayName(OperationStatus.Created),
+                EnumHelper.GetEnumDescription(OperationStatus.Created),
+                (int)StatusCode.Created,
+                new CurrencyDTO(
+                    domainResult.currency.Id,
+                    domainResult.currency.Code,
+                    domainResult.currency.FullName,
+                    domainResult.currency.Sign)
+            );
         }
         catch (Exception ex)
         {
-            return new BaseResponse<CurrencyResponse>
-            {
-                Message = new MessageText($"[Create currency]: {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
+            return new FailedResponse(
+                (int)StatusCode.InternalServerError,
+                EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                $"[CreateCurrency]: {ex.Message}"
+            );
         }
     }
 
-    public async Task<BaseResponse<IEnumerable<CurrencyResponse>>> GetCurrenciesAsync(int pageSize, int pageNumber)
+    public async Task<IResponse> GetAllAsync(int pageSize, int pageNumber)
     {
         try
         {
-            var result = await currencyRepository.GetAll(pageSize, pageNumber);
+            var dbResult = await currencyRepository.GetAll(pageSize, pageNumber);
 
-            if (!result.IsSuccess)
-                return new BaseResponse<IEnumerable<CurrencyResponse>>
-                {
-                    Message = new MessageText(EnumHelper.GetEnumDescription(result.Status)),
-                    StatusCode = StatusCode.NotFound
-                };
+            if (!dbResult.IsSuccess || dbResult.Data == null)
+                return new FailedResponse(
+                    (int)StatusCode.NotFound
+                );
 
-            return new BaseResponse<IEnumerable<CurrencyResponse>>
-            {
-                Message = new MessageText("Success"),
-                StatusCode = StatusCode.OK,
-                Data = result.Data!.Select(x => new CurrencyDTO
-                {
-                    Id = Guid.Parse(x.Id),
-                    Code = x.Code,
-                    FullName = x.FullName,
-                    Sign = x.Sign
-                })
-            };
+            return new SuccessDataResponse<IEnumerable<CurrencyDTO>>(
+                EnumHelper.GetEnumDisplayName(OperationStatus.Received),
+                EnumHelper.GetEnumDescription(OperationStatus.Received),
+                (int)StatusCode.OK,
+                dbResult.Data.Select(x => new CurrencyDTO(
+                    Guid.Parse(x.Id),
+                    x.Code,
+                    x.FullName,
+                    x.Sign)));
         }
         catch (Exception ex)
         {
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
-            {
-                Message = new MessageText($"[Get currencies]: {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
+            return new FailedResponse(
+                (int)StatusCode.InternalServerError,
+                EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                $"[GetCurrencies]: {ex.Message}"
+            );
         }
     }
 
-    public async Task<BaseResponse<CurrencyResponse>> GetCurrencyByIdAsync(Guid id)
+    public async Task<IResponse> GetByIdAsync(Guid id)
     {
         try
         {
-            var result = await currencyRepository.GetById(id);
+            var dbResult = await currencyRepository.GetById(id);
 
-            if (!result.IsSuccess || result.Data == null)
-                return new BaseResponse<CurrencyDTO>
-                {
-                    Message = new MessageText(result.Status!, "Currency get operation failed"),
-                    StatusCode = StatusCode.NotFound
-                };
+            if (!dbResult.IsSuccess || dbResult.Data == null)
+                return new FailedResponse(
+                    (int)StatusCode.NotFound
+                );
 
-            var dto = new CurrencyDTO
-            {
-                Id = Guid.Parse(result.Data.Id),
-                Code = result.Data.Code,
-                FullName = result.Data.FullName,
-                Sign = result.Data.Sign
-            };
 
-            return new BaseResponse<CurrencyDTO>
-            {
-                Message = new MessageText(result.Status!, "Success"),
-                StatusCode = StatusCode.OK,
-                Data = dto
-            };
+            return new SuccessDataResponse<CurrencyDTO>(
+                EnumHelper.GetEnumDisplayName(OperationStatus.Received),
+                EnumHelper.GetEnumDescription(OperationStatus.Received),
+                (int)StatusCode.OK,
+                new CurrencyDTO(
+                    Guid.Parse(dbResult.Data.Id),
+                    dbResult.Data.Code,
+                    dbResult.Data.FullName,
+                    dbResult.Data.Sign));
         }
         catch (Exception ex)
         {
-            return new BaseResponse<CurrencyDTO>
-            {
-                Message = new MessageText($"[GetCurrencyById] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
+            return new FailedResponse(
+                (int)StatusCode.InternalServerError,
+                EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                $"[GetCurrencyById]: {ex.Message}"
+            );
         }
     }
 
-    public async Task<BaseResponse<CurrencyResponse>> UpdateCurrencyAsync(Guid id, UpdateCurrencyRequest request)
+    public async Task<IResponse> UpdateAsync(Guid id, UpdateCurrencyDTO dto)
     {
         try
         {
-            var result = await currencyRepository.Update(id, currency);
+            var domainResult = Currency.Create(id, dto.Code, dto.FullName, dto.Sign);
 
-            if (!result.IsSuccess)
-                return new BaseResponse<Currency>
-                {
-                    Message = new MessageText(result.Status!,
-                        "Currency update operation failed"),
-                    StatusCode = StatusCode.NotFound
-                };
+            if (domainResult.errors.Count > 0 || domainResult.currency == null)
+                return new FailedErrorResponse(
+                    (int)StatusCode.UnprocessableEntity,
+                    domainResult.errors);
 
-            return new BaseResponse<Currency>
-            {
-                Message = new MessageText(result.Status!, "Success"),
-                StatusCode = StatusCode.OK,
-                Data = result.Data
-            };
+            var dbResult = await currencyRepository.Update(id, domainResult.currency);
+
+            // or notfound
+            if (!dbResult.IsSuccess || dbResult.Data == null)
+                return new FailedResponse(
+                    (int)StatusCode.Conflict
+                );
+
+            return new SuccessDataResponse<CurrencyDTO>(
+                EnumHelper.GetEnumDisplayName(OperationStatus.Updated),
+                EnumHelper.GetEnumDescription(OperationStatus.Updated),
+                (int)StatusCode.OK,
+                new CurrencyDTO(
+                    dbResult.Data.Id,
+                    dbResult.Data.Code,
+                    dbResult.Data.FullName,
+                    dbResult.Data.Sign));
         }
         catch (Exception ex)
         {
-            return new BaseResponse<Currency>
-            {
-                Message = new MessageText($"[UpdateCurrency] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
+            return new FailedResponse(
+                (int)StatusCode.InternalServerError,
+                EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                $"[UpdateCurrency]: {ex.Message}"
+            );
         }
     }
 
-    public async Task<BaseResponse<Guid>> DeleteCurrencyAsync(Guid id)
+    public async Task<IResponse> DeleteAsync(Guid id)
     {
         try
         {
-            var result = await currencyRepository.Delete(id);
+            var dbResult = await currencyRepository.Delete(id);
 
-            if (!result.IsSuccess)
-                return new BaseResponse<Guid>
-                {
-                    Message = new MessageText(result.Status!, "Currency delete operation failed"),
-                    StatusCode = StatusCode.NotFound
-                };
+            if (!dbResult.IsSuccess)
+                return new FailedResponse(
+                    (int)StatusCode.NotFound
+                );
 
-            return new BaseResponse<Guid>
-            {
-                Message = new MessageText(result.Status!, "Success"),
-                StatusCode = StatusCode.OK,
-                Data = id
-            };
+            return new SuccessDataResponse<Guid>(
+                EnumHelper.GetEnumDisplayName(OperationStatus.Deleted),
+                EnumHelper.GetEnumDescription(OperationStatus.Deleted),
+                (int)StatusCode.OK,
+                id);
         }
         catch (Exception ex)
         {
-            return new BaseResponse<Guid>
-            {
-                Message = new MessageText($"[DeleteCurrency] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError
-            };
+            return new FailedResponse(
+                (int)StatusCode.InternalServerError,
+                EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                $"[DeleteCurrency]: {ex.Message}"
+            );
         }
     }
 }

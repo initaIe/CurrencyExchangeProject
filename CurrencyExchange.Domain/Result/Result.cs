@@ -1,29 +1,24 @@
-﻿using CurrencyExchange.Domain.Enums;
+﻿namespace CurrencyExchange.Domain.Result;
 
-namespace CurrencyExchange.Domain.Result;
-
-public record BaseResult<T> : IBaseResult<T>
+public record Result<T> : IResult<T>
 {
     /// <summary>
-    ///     Конструктор для успешного результата
+    ///     Конструктор для успешного результата.
     /// </summary>
-    public BaseResult(OperationStatus operationStatus, T data)
+    public Result(T data)
     {
         IsSuccess = true;
-        Status = operationStatus;
         Data = data;
     }
 
     /// <summary>
-    ///     Конструктор для неуспешного результата с сообщением об ошибке
+    ///     Конструктор для неуспешного результата.
     /// </summary>
-    public BaseResult(OperationStatus operationStatus)
+    public Result()
     {
         IsSuccess = false;
-        Status = operationStatus;
     }
 
     public bool IsSuccess { get; }
-    public OperationStatus Status { get; }
     public T? Data { get; }
 }

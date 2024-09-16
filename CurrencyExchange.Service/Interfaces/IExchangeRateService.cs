@@ -1,14 +1,13 @@
 ﻿using CurrencyExchange.Domain.Models;
-using CurrencyExchange.Domain.Response;
-using CurrencyExchange.Service.DTOs;
+using CurrencyExchange.Domain.Response.Interfaces;
 
 namespace CurrencyExchange.Service.Interfaces;
 
 public interface IExchangeRateService
 {
-    Task<IBaseResponse<IEnumerable<ExchangeRateDTO>>> GetCurrenciesAsync(int pageSize = 0, int pageNumber = 0);
-    Task<IBaseResponse<ExchangeRateDTO>> GetCurrencyByIdAsync(Guid id);
-    Task<IBaseResponse<ExchangeRate>> CreateCurrencyAsync(ExchangeRate exchangeRate);
-    Task<IBaseResponse<ExchangeRate>> UpdateCurrencyAsync(Guid id, ExchangeRate exchangeRate);
-    Task<IBaseResponse<Guid>> DeleteCurrencyAsync(Guid id);
+    Task<IResponse> GetCurrenciesAsync(int pageSize = 0, int pageNumber = 0);
+    Task<IResponse> GetCurrencyByIdAsync(Guid id);
+    Task<IResponse> CreateCurrencyAsync(ExchangeRate exchangeRate);
+    Task<IResponse> UpdateCurrencyAsync(Guid id, ExchangeRate exchangeRate);
+    Task<IResponse> DeleteCurrencyAsync(Guid id);
 }

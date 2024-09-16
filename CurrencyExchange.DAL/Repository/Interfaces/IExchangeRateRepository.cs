@@ -6,9 +6,9 @@ namespace CurrencyExchange.DAL.Repository.Interfaces;
 
 public interface IExchangeRateRepository
 {
-    Task<IBaseResult<ExchangeRate>> Create(ExchangeRate exchangeRate);
-    Task<IBaseResult<ExchangeRateEntity>> GetById(Guid id);
-    Task<IBaseResult<IEnumerable<ExchangeRateEntity>>> GetAll(int limit, int offset);
-    Task<IBaseResult<Guid>> Delete(Guid id);
-    Task<IBaseResult<ExchangeRate>> Update(ExchangeRate exchangeRate);
+    Task<IResult<ExchangeRate>> Create(ExchangeRate exchangeRate);
+    Task<IResult<ExchangeRateEntity>> GetById(Guid id);
+    Task<IResult<IEnumerable<ExchangeRateEntity>>> GetAll(int limit, int offset);
+    Task<IResult<Guid>> Delete(Guid id);
+    Task<IResult<ExchangeRate>> Update(ExchangeRate exchangeRate);
 }
