@@ -1,6 +1,7 @@
 using CurrencyExchange.DAL.Commons;
 using CurrencyExchange.DAL.Repository.Implementations;
-using CurrencyExchange.Domain.Entities;
+using CurrencyExchange.DAL.Repository.Interfaces;
+using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Service.Implementations;
 using CurrencyExchange.Service.Interfaces;
 
@@ -17,14 +18,11 @@ builder.Services.AddSingleton<DataBase>(provider =>
     return new DataBase(connectionString!);
 });
 
-// Регистрация CurrencyDAO как реализации интерфейса IBaseDAO
-builder.Services.AddScoped<IBaseRepository<>, CurrencyRepository>();
+builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
 
-// Регистрация CurrencyRepository как реализации интерфейса IBaseRepository
-builder.Services.AddScoped<IBaseRepository<Currency>, CurrencyRepository>();
-
-// Регистрация CurrencyService как реализации интерфейса ICurrencyService
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
 var app = builder.Build();
 

@@ -4,7 +4,10 @@ namespace CurrencyExchange.Domain.Response;
 
 public interface IBaseResponse<T>
 {
-    MessageText? Message { get; }
-    StatusCode? StatusCode { get; }
+    bool IsSuccess { get; }
+    string Status { get; }
+    string Message { get; }
+    StatusCode StatusCode { get; }
     T? Data { get; }
+    string[]? Errors { get; }
 }

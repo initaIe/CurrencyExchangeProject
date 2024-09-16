@@ -1,6 +1,6 @@
 ﻿using CurrencyExchange.Domain.Helpers;
 
-namespace CurrencyExchange.Domain.Entities;
+namespace CurrencyExchange.Domain.Models;
 
 public class ExchangeRate
 {

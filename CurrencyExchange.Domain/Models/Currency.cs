@@ -1,4 +1,4 @@
-﻿namespace CurrencyExchange.Domain.Entities;
+﻿namespace CurrencyExchange.Domain.Models;
 
 public class Currency
 {

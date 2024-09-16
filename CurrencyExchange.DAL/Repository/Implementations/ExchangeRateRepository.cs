@@ -1,42 +1,42 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DTOs;
+using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.DAL.Result;
-using CurrencyExchange.Domain.Entities;
+using CurrencyExchange.Domain.Enums;
+using CurrencyExchange.Domain.Models;
+using CurrencyExchange.Domain.Result;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class ExchangeRateRepository(DataBase db)
-    : IBaseRepository<ExchangeRate, ExchangeRateDTO>
+    : IExchangeRateRepository
 {
-    public async Task<IBaseResult<ExchangeRate>> Create(ExchangeRateDTO dto)
+    public async Task<IBaseResult<ExchangeRate>> Create(ExchangeRate exchangeRate)
     {
         var commandText = "INSERT INTO ExchangeRates (Id, BaseCurrencyId, TargetCurrencyId, Rate) " +
                           "VALUES (@Id, @BaseCurrencyId, @TargetCurrencyId, @Rate);";
 
         var parameters = new[]
         {
-            new SqliteParameter("@Id", dto.Id),
-            new SqliteParameter("@BaseCurrencyId", dto.BaseCurrency.Id),
-            new SqliteParameter("@TargetCurrencyId", dto.TargetCurrency.Id),
-            new SqliteParameter("@Rate", dto.Rate)
+            new SqliteParameter("@Id", exchangeRate.Id),
+            new SqliteParameter("@BaseCurrencyId", exchangeRate.BaseCurrency.Id),
+            new SqliteParameter("@TargetCurrencyId", exchangeRate.TargetCurrency.Id),
+            new SqliteParameter("@Rate", exchangeRate.Rate)
         };
 
         var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isCreated = affectedRows > 0;
 
-        return new BaseResult<ExchangeRate>
-        {
-            IsSuccess = isCreated,
-            Message = isCreated
-                ? $"ExchangeRate with Id {dto.Id} has been created"
-                : $"ExchangeRate with Id {dto.Id} has not been created"
-        };
+        return isCreated
+            ? new BaseResult<ExchangeRate>(
+                operationStatus: OperationStatus.Created,
+                data: exchangeRate)
+            : new BaseResult<ExchangeRate>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<ExchangeRate>> GetById(Guid id)
+    public async Task<IBaseResult<ExchangeRateEntity>> GetById(Guid id)
     {
         var commandText = "SELECT " +
                           "er.Id AS ExchangeRateId, " +
@@ -47,7 +47,8 @@ public class ExchangeRateRepository(DataBase db)
                           "tc.Id AS TargetCurrencyId, " +
                           "tc.Code AS TargetCurrencyCode, " +
                           "tc.FullName AS TargetCurrencyFullName, " +
-                          "tc.Sign AS TargetCurrencySign, er.Rate " +
+                          "tc.Sign AS TargetCurrencySign, " +
+                          "er.Rate " +
                           "FROM  ExchangeRates er " +
                           "JOIN  Currencies bc ON er.BaseCurrencyId = bc.Id " +
                           "JOIN Currencies tc ON er.TargetCurrencyId = tc.Id " +
@@ -58,55 +59,41 @@ public class ExchangeRateRepository(DataBase db)
             new SqliteParameter("@Id", id)
         };
 
-        var exchangeRateResult = await db.QuerySingleOrDefaultAsync(
+        var exchangeRate = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader =>
+            reader => new ExchangeRateEntity()
             {
-                // Создаем базовую валюту
-                var baseCurrencyResult = Currency.Create(
-                    reader.GetGuid(1),
-                    reader.GetString(2),
-                    reader.GetString(3),
-                    reader.GetString(4)
-                );
-
-                // Создаем целевую валюту
-                var targetCurrencyResult = Currency.Create(
-                    reader.GetGuid(5),
-                    reader.GetString(6),
-                    reader.GetString(7),
-                    reader.GetString(8)
-                );
-
-                // Если одна из валют не создана, возвращаем null
-                if (baseCurrencyResult.currency == null || targetCurrencyResult.currency == null)
-                    return (null, baseCurrencyResult.error + targetCurrencyResult.error);
-
-                // Создаем ExchangeRate, если обе валюты валидны
-                return ExchangeRate.Create(
-                    reader.GetGuid(0),
-                    baseCurrencyResult.currency,
-                    targetCurrencyResult.currency,
-                    reader.GetDecimal(9)
-                );
+                Id = reader.GetString(0),
+                BaseCurrency = new CurrencyEntity
+                {
+                    Id = reader.GetString(1),
+                    Code = reader.GetString(2),
+                    FullName = reader.GetString(4),
+                    Sign = reader.GetString(5),
+                },
+                TargetCurrency = new CurrencyEntity
+                {
+                    Id = reader.GetString(6),
+                    Code = reader.GetString(7),
+                    FullName = reader.GetString(8),
+                    Sign = reader.GetString(9),
+                },
+                Rate = reader.GetDecimal(10)
             },
             parameters
         );
 
-        var isReceived = exchangeRateResult.exchangeRate != null;
+        var isReceived = exchangeRate != null;
 
-        // Формируем сообщение с учетом результата
-        return new BaseResult<ExchangeRate>
-        {
-            IsSuccess = isReceived,
-            Message = isReceived
-                ? $"ExchangeRate with Id {id} was successfully received."
-                : $"ExchangeRate with Id {id} was not received.",
-            Data = isReceived ? exchangeRateResult.exchangeRate : null
-        };
+        return isReceived
+            ? new BaseResult<ExchangeRateEntity>(
+                operationStatus: OperationStatus.Received,
+                data: exchangeRate!)
+            : new BaseResult<ExchangeRateEntity>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<IEnumerable<ExchangeRate>>> GetAll(int limit = 0, int offset = 0)
+    public async Task<IBaseResult<IEnumerable<ExchangeRateEntity>>> GetAll(int limit, int offset)
     {
         var commandText = "SELECT * FROM ExchangeRates";
         var parameters = Array.Empty<SqliteParameter>();
@@ -123,64 +110,43 @@ public class ExchangeRateRepository(DataBase db)
             };
         }
 
-        var exchangeRatesCreationResult = await db.QueryAsync(
+        var exchangeRates = await db.QueryAsync(
             commandText,
-            reader =>
+            reader => new ExchangeRateEntity()
             {
-                var baseCurrencyResult = Currency.Create(
-                    reader.GetGuid(1),
-                    reader.GetString(4),
-                    reader.GetString(5),
-                    reader.GetString(6));
-
-                var targetCurrencyResult = Currency.Create(
-                    reader.GetGuid(2),
-                    reader.GetString(7),
-                    reader.GetString(8),
-                    reader.GetString(9));
-
-                if (baseCurrencyResult.currency == null || targetCurrencyResult.currency == null)
-                    return (null, baseCurrencyResult.error + targetCurrencyResult.error);
-
-                return ExchangeRate.Create(
-                    reader.GetGuid(0),
-                    baseCurrencyResult.currency,
-                    targetCurrencyResult.currency,
-                    reader.GetDecimal(3));
+                Id = reader.GetString(0),
+                BaseCurrency = new CurrencyEntity
+                {
+                    Id = reader.GetString(1),
+                    Code = reader.GetString(2),
+                    FullName = reader.GetString(4),
+                    Sign = reader.GetString(5),
+                },
+                TargetCurrency = new CurrencyEntity
+                {
+                    Id = reader.GetString(6),
+                    Code = reader.GetString(7),
+                    FullName = reader.GetString(8),
+                    Sign = reader.GetString(9),
+                },
+                Rate = reader.GetDecimal(10)
             },
             parameters
         );
 
-        var exchangeRatesList = exchangeRatesCreationResult.ToList();
+        var exchangeRatesList = exchangeRates.ToList();
 
         var isReceived = exchangeRatesList.Count > 0;
 
-        var errors = exchangeRatesList
-            .Where(c => !string.IsNullOrEmpty(c.error))
-            .Select(c => c.error)
-            .ToList();
-
-        var validExchangeRates = exchangeRatesList
-            .Where(c => c.exchangeRate != null)
-            .Select(c => c.exchangeRate!)
-            .ToList();
-
-        var errorMessage = errors.Count > 0
-            ? $"Some exchange rates were not created due to errors: {string.Join("; ", errors)}"
-            : null;
-
-        return new BaseResult<IEnumerable<ExchangeRate>>
-        {
-            IsSuccess = isReceived && errors.Count == 0,
-            Message = isReceived
-                ? errorMessage
-                  ?? "All exchange rates were successfully received"
-                : "Not all exchange rates were received",
-            Data = validExchangeRates.Count != 0 ? validExchangeRates : null
-        };
+        return isReceived
+            ? new BaseResult<IEnumerable<ExchangeRateEntity>>(
+                operationStatus: OperationStatus.Received,
+                data: exchangeRatesList!)
+            : new BaseResult<IEnumerable<ExchangeRateEntity>>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<ExchangeRate>> Delete(Guid id)
+    public async Task<IBaseResult<Guid>> Delete(Guid id)
     {
         var commandText = "DELETE FROM ExchangeRates " +
                           "WHERE Id=@Id;";
@@ -194,43 +160,39 @@ public class ExchangeRateRepository(DataBase db)
 
         var isDeleted = affectedRows > 0;
 
-        return new BaseResult<ExchangeRate>
-        {
-            IsSuccess = isDeleted,
-            Message = isDeleted
-                ? $"ExchangeRate with Id {id} has been deleted"
-                : $"ExchangeRate with Id {id} has not been deleted"
-        };
+        return isDeleted
+            ? new BaseResult<Guid>(
+                operationStatus: OperationStatus.Deleted,
+                data: id)
+            : new BaseResult<Guid>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<ExchangeRate>> Update(Guid id, ExchangeRateDTO dto)
+    public async Task<IBaseResult<ExchangeRate>> Update(ExchangeRate exchangeRate)
     {
         var commandText = "UPDATE ExchangeRates " +
-                          "SET Id = @NewId, " +
-                          "BaseCurrencyId = @BaseCurrencyId, " +
+                          "SET BaseCurrencyId = @BaseCurrencyId, " +
                           "TargetCurrencyId = @TargetCurrencyId, " +
                           "Rate = @Rate " +
                           "WHERE Id = @OldId;";
 
         var parameters = new[]
         {
-            new SqliteParameter("@OldId", id),
-            new SqliteParameter("@NewId", dto.Id),
-            new SqliteParameter("@BaseCurrencyId", dto.BaseCurrency.Id),
-            new SqliteParameter("@TargetCurrencyId", dto.TargetCurrency.Id),
-            new SqliteParameter("@Rate", dto.Rate)
+            new SqliteParameter("@Id", exchangeRate.Id),
+            new SqliteParameter("@BaseCurrencyId", exchangeRate.BaseCurrency.Id),
+            new SqliteParameter("@TargetCurrencyId", exchangeRate.TargetCurrency.Id),
+            new SqliteParameter("@Rate", exchangeRate.Rate)
         };
 
         var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isUpdated = affectedRows > 0;
 
-        return new BaseResult<ExchangeRate>
-        {
-            IsSuccess = isUpdated,
-            Message = isUpdated
-                ? $"ExchangeRate with Id {dto.Id} has been created"
-                : $"ExchangeRate with Id {id} has not been created"
-        };
+        return isUpdated
+            ? new BaseResult<ExchangeRate>(
+                operationStatus: OperationStatus.Updated,
+                data: exchangeRate)
+            : new BaseResult<ExchangeRate>(
+                operationStatus: OperationStatus.Failed);
     }
 }

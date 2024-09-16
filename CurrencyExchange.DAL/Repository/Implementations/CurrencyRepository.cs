@@ -1,42 +1,42 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.DTOs;
+using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.DAL.Result;
-using CurrencyExchange.Domain.Entities;
+using CurrencyExchange.Domain.Enums;
+using CurrencyExchange.Domain.Models;
+using CurrencyExchange.Domain.Result;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class CurrencyRepository(DataBase db)
-    : IBaseRepository<Currency, CurrencyDTO>
+    : ICurrencyRepository
 {
-    public async Task<IBaseResult<Currency>> Create(CurrencyDTO dto)
+    public async Task<IBaseResult<Currency>> Create(Currency currency)
     {
         var commandText = "INSERT INTO Currencies (Id, Code, FullName, Sign) " +
                           "VALUES (@Id, @Code, @FullName, @Sign);";
 
         var parameters = new[]
         {
-            new SqliteParameter("@Id", dto.Id),
-            new SqliteParameter("@Code", dto.Code),
-            new SqliteParameter("@FullName", dto.FullName),
-            new SqliteParameter("@Sign", dto.Sign)
+            new SqliteParameter("@Id", currency.Id),
+            new SqliteParameter("@Code", currency.Code),
+            new SqliteParameter("@FullName", currency.FullName),
+            new SqliteParameter("@Sign", currency.Sign)
         };
 
         var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isCreated = affectedRows > 0;
 
-        return new BaseResult<Currency>
-        {
-            IsSuccess = isCreated,
-            Message = isCreated
-                ? $"Currency with Id {dto.Id} has been created"
-                : $"Currency with Id {dto.Id} has not been created"
-        };
+        return isCreated
+            ? new BaseResult<Currency>(
+                operationStatus: OperationStatus.Created,
+                data: currency)
+            : new BaseResult<Currency>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<Currency>> GetById(Guid id)
+    public async Task<IBaseResult<CurrencyEntity>> GetById(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -45,32 +45,30 @@ public class CurrencyRepository(DataBase db)
             new SqliteParameter("@Id", id)
         };
 
-        var currencyCreationResult = await db.QuerySingleOrDefaultAsync(
+        var currencyEntity = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader => Currency.Create(
-                reader.GetGuid(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.GetString(3)),
+            reader => new CurrencyEntity()
+            {
+                Id = reader.GetString(0),
+                Code = reader.GetString(1),
+                FullName = reader.GetString(2),
+                Sign = reader.GetString(3)
+            },
             parameters
         );
 
-        var isReceived = currencyCreationResult.currency != null;
+        var isReceived = currencyEntity != null;
 
-        return new BaseResult<Currency>
-        {
-            IsSuccess = isReceived,
-            Message = isReceived
-                ? $"Currency with Id {id} was received"
-                : $"Currency with Id {id} was not received. Currency creation error: [{currencyCreationResult.error}]",
-            Data = isReceived
-                ? currencyCreationResult.currency
-                : null
-        };
+        return isReceived
+            ? new BaseResult<CurrencyEntity>(
+                operationStatus: OperationStatus.Received,
+                data: currencyEntity!)
+            : new BaseResult<CurrencyEntity>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<IEnumerable<Currency>>> GetAll
-        (int limit = 0, int offset = 0)
+    public async Task<IBaseResult<IEnumerable<CurrencyEntity>>> GetAll
+        (int limit, int offset)
     {
         var commandText = "SELECT * FROM Currencies";
         var parameters = Array.Empty<SqliteParameter>();
@@ -87,46 +85,31 @@ public class CurrencyRepository(DataBase db)
             };
         }
 
-        var currenciesCreationResult = await db.QueryAsync(
+        var currencyEntities = await db.QueryAsync(
             commandText,
-            reader => Currency.Create(
-                reader.GetGuid(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.GetString(3)),
+            reader => new CurrencyEntity()
+            {
+                Id = reader.GetString(0),
+                Code = reader.GetString(1),
+                FullName = reader.GetString(2),
+                Sign = reader.GetString(3)
+            },
             parameters
         );
 
-        var currenciesList = currenciesCreationResult.ToList();
+        var currenciesList = currencyEntities.ToList();
 
         var isReceived = currenciesList.Count > 0;
 
-        var errors = currenciesList
-            .Where(c => !string.IsNullOrEmpty(c.error))
-            .Select(c => c.error)
-            .ToList();
-
-        var validCurrencies = currenciesList
-            .Where(c => c.currency != null)
-            .Select(c => c.currency!)
-            .ToList();
-
-        var errorMessage = errors.Count > 0
-            ? $"Some currencies were not created due to errors: {string.Join("; ", errors)}"
-            : null;
-
-        return new BaseResult<IEnumerable<Currency>>
-        {
-            IsSuccess = isReceived && errors.Count == 0,
-            Message = isReceived
-                ? errorMessage
-                  ?? "All currencies were successfully received"
-                : "Not all currencies were received",
-            Data = validCurrencies.Count != 0 ? validCurrencies : null
-        };
+        return isReceived
+            ? new BaseResult<IEnumerable<CurrencyEntity>>(
+                operationStatus: OperationStatus.Received,
+                data: currenciesList)
+            : new BaseResult<IEnumerable<CurrencyEntity>>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<Currency>> Delete(Guid id)
+    public async Task<IBaseResult<Guid>> Delete(Guid id)
     {
         var commandText = "DELETE FROM Currencies " +
                           "WHERE Id=@Id;";
@@ -140,43 +123,39 @@ public class CurrencyRepository(DataBase db)
 
         var isDeleted = affectedRows > 0;
 
-        return new BaseResult<Currency>
-        {
-            IsSuccess = isDeleted,
-            Message = isDeleted
-                ? $"Currency with Id {id} has been deleted"
-                : $"Currency with Id {id} has not been deleted"
-        };
+        return isDeleted
+            ? new BaseResult<Guid>(
+                operationStatus: OperationStatus.Received,
+                data: id)
+            : new BaseResult<Guid>(
+                operationStatus: OperationStatus.Failed);
     }
 
-    public async Task<IBaseResult<Currency>> Update(Guid id, CurrencyDTO dto)
+    public async Task<IBaseResult<Currency>> Update(Currency currency)
     {
         var commandText = "UPDATE Currencies " +
-                          "SET Id = @NewId, " +
-                          "Code = @Code, " +
+                          "SET Code = @Code, " +
                           "FullName = @FullName, " +
                           "Sign = @Sign " +
                           "WHERE Id = @OldId;";
 
         var parameters = new[]
         {
-            new SqliteParameter("@OldId", id),
-            new SqliteParameter("@NewId", dto.Id),
-            new SqliteParameter("@Code", dto.Code),
-            new SqliteParameter("@FullName", dto.FullName),
-            new SqliteParameter("@Sign", dto.Sign)
+            new SqliteParameter("@Id", currency.Id),
+            new SqliteParameter("@Code", currency.Code),
+            new SqliteParameter("@FullName", currency.FullName),
+            new SqliteParameter("@Sign", currency.Sign)
         };
 
         var affectedRows = await db.ExecuteAsync(commandText, parameters);
 
         var isUpdated = affectedRows > 0;
 
-        return new BaseResult<Currency>
-        {
-            IsSuccess = isUpdated,
-            Message = isUpdated
-                ? $"Currency with Id {dto.Id} has been updated"
-                : $"Currency with Id {id} has not been updated"
-        };
+        return isUpdated
+            ? new BaseResult<Currency>(
+                operationStatus: OperationStatus.Updated,
+                data: currency)
+            : new BaseResult<Currency>(
+                operationStatus: OperationStatus.Failed);
     }
 }

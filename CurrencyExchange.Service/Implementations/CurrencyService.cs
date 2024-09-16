@@ -1,68 +1,123 @@
-﻿using CurrencyExchange.Domain.Entities;
+﻿using CurrencyExchange.Contracts.Currency;
+using CurrencyExchange.DAL.Entities;
+using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Enums;
+using CurrencyExchange.Domain.Helpers;
+using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Response;
 using CurrencyExchange.Service.DTOs;
 using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICurrencyService
+public class CurrencyService(ICurrencyRepository currencyRepository)
+    : ICurrencyService
 {
-    public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync(int pageSize, int pageNumber)
+    public async Task<IBaseResponse<CurrencyDTO>> CreateCurrencyAsync(CreateCurrencyDTO dto)
     {
         try
         {
-            var currencies = await currencyRepository.GetAll(pageSize, pageNumber);
+            var modelCreationResult = Currency.Create
+                (Guid.NewGuid(), request.Code, request.FullName, request.Sign);
 
-            var dto = currencies.Select(currency => new CurrencyDTO
+
+            if (!string.IsNullOrEmpty(modelCreationResult.error) || modelCreationResult.currency == null)
+                return new BaseResponse<CurrencyResponse>
+                {
+                    Message = new MessageText(modelCreationResult.error),
+                    StatusCode = StatusCode.BadRequest
+                };
+
+            var dbCreationResult = await currencyRepository.Create(modelCreationResult.currency);
+
+            if (!dbCreationResult.IsSuccess || dbCreationResult.Data == null)
+                return new BaseResponse<CurrencyResponse>
+                {
+                    Message = new MessageText(EnumHelper.GetEnumDescription(dbCreationResult.Status)),
+                    StatusCode = StatusCode.Conflict
+                };
+
+            return new BaseResponse<CurrencyResponse>
             {
-                Id = currency.Id,
-                Code = currency.Code,
-                FullName = currency.FullName,
-                Sign = currency.Sign
-            });
+                Message = new MessageText(EnumHelper.GetEnumDescription(StatusCode.Created)),
+                StatusCode = StatusCode.Created,
+                Data = new CurrencyResponse(
+                    dbCreationResult.Data.Id,
+                    dbCreationResult.Data.Code,
+                    dbCreationResult.Data.FullName,
+                    dbCreationResult.Data.Sign)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BaseResponse<CurrencyResponse>
+            {
+                Message = new MessageText($"[Create currency]: {ex.Message}"),
+                StatusCode = StatusCode.InternalServerError
+            };
+        }
+    }
 
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
+    public async Task<BaseResponse<IEnumerable<CurrencyResponse>>> GetCurrenciesAsync(int pageSize, int pageNumber)
+    {
+        try
+        {
+            var result = await currencyRepository.GetAll(pageSize, pageNumber);
+
+            if (!result.IsSuccess)
+                return new BaseResponse<IEnumerable<CurrencyResponse>>
+                {
+                    Message = new MessageText(EnumHelper.GetEnumDescription(result.Status)),
+                    StatusCode = StatusCode.NotFound
+                };
+
+            return new BaseResponse<IEnumerable<CurrencyResponse>>
             {
                 Message = new MessageText("Success"),
-                Data = dto,
-                StatusCode = StatusCode.OK
+                StatusCode = StatusCode.OK,
+                Data = result.Data!.Select(x => new CurrencyDTO
+                {
+                    Id = Guid.Parse(x.Id),
+                    Code = x.Code,
+                    FullName = x.FullName,
+                    Sign = x.Sign
+                })
             };
         }
         catch (Exception ex)
         {
             return new BaseResponse<IEnumerable<CurrencyDTO>>
             {
-                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
+                Message = new MessageText($"[Get currencies]: {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError
             };
         }
     }
 
-    public async Task<BaseResponse<CurrencyDTO>> GetCurrencyByIdAsync(int id)
+    public async Task<BaseResponse<CurrencyResponse>> GetCurrencyByIdAsync(Guid id)
     {
         try
         {
-            var currency = await currencyRepository.GetById(id);
+            var result = await currencyRepository.GetById(id);
 
-            if (currency == null)
+            if (!result.IsSuccess || result.Data == null)
                 return new BaseResponse<CurrencyDTO>
                 {
-                    Message = new MessageText("Currency not found"),
+                    Message = new MessageText(result.Status!, "Currency get operation failed"),
                     StatusCode = StatusCode.NotFound
                 };
 
             var dto = new CurrencyDTO
             {
-                Id = currency.Id,
-                Code = currency.Code,
-                FullName = currency.FullName,
-                Sign = currency.Sign
+                Id = Guid.Parse(result.Data.Id),
+                Code = result.Data.Code,
+                FullName = result.Data.FullName,
+                Sign = result.Data.Sign
             };
 
             return new BaseResponse<CurrencyDTO>
             {
-                Message = new MessageText("Success"),
+                Message = new MessageText(result.Status!, "Success"),
                 StatusCode = StatusCode.OK,
                 Data = dto
             };
@@ -77,161 +132,62 @@ public class CurrencyService(IBaseRepository<Currency> currencyRepository) : ICu
         }
     }
 
-    public async Task<BaseResponse<bool>> CreateCurrencyAsync(CurrencyDTO dto)
+    public async Task<BaseResponse<CurrencyResponse>> UpdateCurrencyAsync(Guid id, UpdateCurrencyRequest request)
     {
         try
         {
-            var currency = new Currency
-            {
-                Code = dto.Code,
-                FullName = dto.FullName,
-                Sign = dto.Sign
-            };
+            var result = await currencyRepository.Update(id, currency);
 
-            var isCreated = await currencyRepository.Create(currency);
-
-            if (!isCreated)
-                return new BaseResponse<bool>
+            if (!result.IsSuccess)
+                return new BaseResponse<Currency>
                 {
-                    Message = new MessageText("Error creating new currency"),
-                    StatusCode = StatusCode.Conflict,
-                    Data = false
+                    Message = new MessageText(result.Status!,
+                        "Currency update operation failed"),
+                    StatusCode = StatusCode.NotFound
                 };
 
-            return new BaseResponse<bool>
+            return new BaseResponse<Currency>
             {
-                Message = new MessageText("Success"),
-                StatusCode = StatusCode.Created,
-                Data = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new BaseResponse<bool>
-            {
-                Message = new MessageText($"[CreateCurrency] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError,
-                Data = false
-            };
-        }
-    }
-
-    public async Task<BaseResponse<bool>> UpdateCurrencyAsync(int id, CurrencyDTO dto)
-    {
-        try
-        {
-            var currency = await currencyRepository.GetById(id);
-
-            if (currency == null)
-                return new BaseResponse<bool>
-                {
-                    Message = new MessageText("The currency that should be updated was not found"),
-                    StatusCode = StatusCode.NotFound,
-                    Data = false
-                };
-
-            {
-                currency.Code = dto.Code;
-                currency.FullName = dto.FullName;
-                currency.Sign = dto.Sign;
-            }
-
-            var isUpdated = await currencyRepository.Update(currency);
-
-            if (!isUpdated)
-                return new BaseResponse<bool>
-                {
-                    Message = new MessageText("Error updating new currency"),
-                    StatusCode = StatusCode.BadRequest,
-                    Data = false
-                };
-
-            return new BaseResponse<bool>
-            {
-                Message = new MessageText("Success"),
+                Message = new MessageText(result.Status!, "Success"),
                 StatusCode = StatusCode.OK,
-                Data = true
+                Data = result.Data
             };
         }
         catch (Exception ex)
         {
-            return new BaseResponse<bool>
+            return new BaseResponse<Currency>
             {
                 Message = new MessageText($"[UpdateCurrency] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError,
-                Data = false
+                StatusCode = StatusCode.InternalServerError
             };
         }
     }
 
-    public async Task<BaseResponse<bool>> DeleteCurrencyAsync(int id)
+    public async Task<BaseResponse<Guid>> DeleteCurrencyAsync(Guid id)
     {
         try
         {
-            var currency = await currencyRepository.GetById(id);
+            var result = await currencyRepository.Delete(id);
 
-            if (currency == null)
-                return new BaseResponse<bool>
+            if (!result.IsSuccess)
+                return new BaseResponse<Guid>
                 {
-                    Message = new MessageText("Currency not found"),
-                    StatusCode = StatusCode.NotFound,
-                    Data = false
+                    Message = new MessageText(result.Status!, "Currency delete operation failed"),
+                    StatusCode = StatusCode.NotFound
                 };
 
-            var isDeleted = await currencyRepository.Delete(currency);
-
-            if (!isDeleted)
-                return new BaseResponse<bool>
-                {
-                    Message = new MessageText("Error deleting currency"),
-                    StatusCode = StatusCode.BadRequest,
-                    Data = false
-                };
-
-            return new BaseResponse<bool>
+            return new BaseResponse<Guid>
             {
-                Message = new MessageText("Success"),
+                Message = new MessageText(result.Status!, "Success"),
                 StatusCode = StatusCode.OK,
-                Data = true
+                Data = id
             };
         }
         catch (Exception ex)
         {
-            return new BaseResponse<bool>
+            return new BaseResponse<Guid>
             {
                 Message = new MessageText($"[DeleteCurrency] : {ex.Message}"),
-                StatusCode = StatusCode.InternalServerError,
-                Data = false
-            };
-        }
-    }
-
-    public async Task<BaseResponse<IEnumerable<CurrencyDTO>>> GetCurrenciesAsync()
-    {
-        try
-        {
-            var currencies = await currencyRepository.GetAll();
-
-            var dto = currencies.Select(currency => new CurrencyDTO
-            {
-                Id = currency.Id,
-                Code = currency.Code,
-                FullName = currency.FullName,
-                Sign = currency.Sign
-            });
-
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
-            {
-                Message = new MessageText("Success"),
-                Data = dto,
-                StatusCode = StatusCode.OK
-            };
-        }
-        catch (Exception ex)
-        {
-            return new BaseResponse<IEnumerable<CurrencyDTO>>
-            {
-                Message = new MessageText($"[GetCurrencies]: {ex.Message}"),
                 StatusCode = StatusCode.InternalServerError
             };
         }
