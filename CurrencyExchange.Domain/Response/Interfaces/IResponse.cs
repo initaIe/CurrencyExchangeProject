@@ -2,12 +2,9 @@
 
 namespace CurrencyExchange.Domain.Response;
 
-public interface IBaseResponse<T>
+public interface IResponse
 {
-    bool IsSuccess { get; }
     string Status { get; }
     string Message { get; }
     StatusCode StatusCode { get; }
-    T? Data { get; }
-    string[]? Errors { get; }
 }
