@@ -1,6 +1,12 @@
+using CurrencyExchange.Contracts.Currency;
+using CurrencyExchange.Contracts.Currency.DTOs;
+using CurrencyExchange.Contracts.ExchangeRate;
+using CurrencyExchange.Contracts.ExchangeRate.DTOs;
 using CurrencyExchange.DAL.Commons;
+using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Implementations;
 using CurrencyExchange.DAL.Repository.Interfaces;
+using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Service.Implementations;
 using CurrencyExchange.Service.Interfaces;
 
@@ -17,11 +23,11 @@ builder.Services.AddSingleton<DataBase>(provider =>
     return new DataBase(connectionString!);
 });
 
-builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
-// builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+builder.Services.AddScoped<IService<CreateCurrencyDTO, UpdateCurrencyDTO>, CurrencyService>();
+builder.Services.AddScoped<IService<CreateExchangeRateDTO, UpdateExchangeRateDTO>, ExchangeRateService>();
 
-builder.Services.AddScoped<ICurrencyService, CurrencyService>();
-// builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
+builder.Services.AddScoped<IRepository<Currency, CurrencyEntity>, CurrencyRepository>();
+builder.Services.AddScoped<IRepository<ExchangeRate, ExchangeRateEntity>, ExchangeRateRepository>();
 
 var app = builder.Build();
 

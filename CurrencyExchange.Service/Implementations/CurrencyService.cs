@@ -1,4 +1,6 @@
 ﻿using CurrencyExchange.Contracts.Currency;
+using CurrencyExchange.Contracts.Currency.DTOs;
+using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Enums;
 using CurrencyExchange.Domain.Helpers;
@@ -9,8 +11,8 @@ using CurrencyExchange.Service.Interfaces;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class CurrencyService(ICurrencyRepository currencyRepository)
-    : ICurrencyService
+public class CurrencyService(IRepository<Currency, CurrencyEntity> currencyRepository)
+    : IService<CreateCurrencyDTO, UpdateCurrencyDTO>
 {
     public async Task<IResponse> CreateAsync(CreateCurrencyDTO dto)
     {
@@ -20,21 +22,21 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
 
             if (domainResult.errors.Count > 0 || domainResult.currency == null)
                 return new FailedErrorResponse(
-                    (int)StatusCode.UnprocessableEntity,
-                    domainResult.errors);
+                    statusCode: (int)StatusCode.UnprocessableEntity,
+                    errors: domainResult.errors);
 
-            var dbResult = await currencyRepository.Create(domainResult.currency);
+            var dbResult = await currencyRepository.CreateAsync(domainResult.currency);
 
             if (!dbResult.IsSuccess || dbResult.Data == null)
                 return new FailedResponse(
-                    (int)StatusCode.Conflict
+                    statusCode: (int)StatusCode.Conflict
                 );
 
             return new SuccessDataResponse<CurrencyDTO>(
-                EnumHelper.GetEnumDisplayName(OperationStatus.Created),
-                EnumHelper.GetEnumDescription(OperationStatus.Created),
-                (int)StatusCode.Created,
-                new CurrencyDTO(
+                status: EnumHelper.GetEnumDisplayName(OperationStatus.Created),
+                message: EnumHelper.GetEnumDescription(OperationStatus.Created),
+                statusCode: (int)StatusCode.Created,
+                data: new CurrencyDTO(
                     domainResult.currency.Id,
                     domainResult.currency.Code,
                     domainResult.currency.FullName,
@@ -44,9 +46,9 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
         catch (Exception ex)
         {
             return new FailedResponse(
-                (int)StatusCode.InternalServerError,
-                EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                $"[CreateCurrency]: {ex.Message}"
+                statusCode: (int)StatusCode.InternalServerError,
+                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                message: $"[Create]: {ex.Message}"
             );
         }
     }
@@ -55,18 +57,18 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
     {
         try
         {
-            var dbResult = await currencyRepository.GetAll(pageSize, pageNumber);
+            var dbResult = await currencyRepository.GetAllAsync(pageSize, pageNumber);
 
             if (!dbResult.IsSuccess || dbResult.Data == null)
                 return new FailedResponse(
-                    (int)StatusCode.NotFound
+                    statusCode: (int)StatusCode.NotFound
                 );
 
             return new SuccessDataResponse<IEnumerable<CurrencyDTO>>(
-                EnumHelper.GetEnumDisplayName(OperationStatus.Received),
-                EnumHelper.GetEnumDescription(OperationStatus.Received),
-                (int)StatusCode.OK,
-                dbResult.Data.Select(x => new CurrencyDTO(
+                status: EnumHelper.GetEnumDisplayName(OperationStatus.Received),
+                message: EnumHelper.GetEnumDescription(OperationStatus.Received),
+                statusCode: (int)StatusCode.OK,
+                data: dbResult.Data.Select(x => new CurrencyDTO(
                     Guid.Parse(x.Id),
                     x.Code,
                     x.FullName,
@@ -75,9 +77,9 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
         catch (Exception ex)
         {
             return new FailedResponse(
-                (int)StatusCode.InternalServerError,
-                EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                $"[GetCurrencies]: {ex.Message}"
+                statusCode: (int)StatusCode.InternalServerError,
+                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                message: $"[GetAll]: {ex.Message}"
             );
         }
     }
@@ -86,19 +88,19 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
     {
         try
         {
-            var dbResult = await currencyRepository.GetById(id);
+            var dbResult = await currencyRepository.GetByIdAsync(id);
 
             if (!dbResult.IsSuccess || dbResult.Data == null)
                 return new FailedResponse(
-                    (int)StatusCode.NotFound
+                    statusCode: (int)StatusCode.NotFound
                 );
 
 
             return new SuccessDataResponse<CurrencyDTO>(
-                EnumHelper.GetEnumDisplayName(OperationStatus.Received),
-                EnumHelper.GetEnumDescription(OperationStatus.Received),
-                (int)StatusCode.OK,
-                new CurrencyDTO(
+                status: EnumHelper.GetEnumDisplayName(OperationStatus.Received),
+                message: EnumHelper.GetEnumDescription(OperationStatus.Received),
+                statusCode: (int)StatusCode.OK,
+                data: new CurrencyDTO(
                     Guid.Parse(dbResult.Data.Id),
                     dbResult.Data.Code,
                     dbResult.Data.FullName,
@@ -107,9 +109,9 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
         catch (Exception ex)
         {
             return new FailedResponse(
-                (int)StatusCode.InternalServerError,
-                EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                $"[GetCurrencyById]: {ex.Message}"
+                statusCode: (int)StatusCode.InternalServerError,
+                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                message: $"[GetById]: {ex.Message}"
             );
         }
     }
@@ -122,22 +124,22 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
 
             if (domainResult.errors.Count > 0 || domainResult.currency == null)
                 return new FailedErrorResponse(
-                    (int)StatusCode.UnprocessableEntity,
-                    domainResult.errors);
+                    statusCode: (int)StatusCode.UnprocessableEntity,
+                    errors: domainResult.errors);
 
-            var dbResult = await currencyRepository.Update(id, domainResult.currency);
+            var dbResult = await currencyRepository.UpdateAsync(id, domainResult.currency);
 
             // or notfound
             if (!dbResult.IsSuccess || dbResult.Data == null)
                 return new FailedResponse(
-                    (int)StatusCode.Conflict
+                    statusCode: (int)StatusCode.Conflict
                 );
 
             return new SuccessDataResponse<CurrencyDTO>(
-                EnumHelper.GetEnumDisplayName(OperationStatus.Updated),
-                EnumHelper.GetEnumDescription(OperationStatus.Updated),
-                (int)StatusCode.OK,
-                new CurrencyDTO(
+                status: EnumHelper.GetEnumDisplayName(OperationStatus.Updated),
+                message: EnumHelper.GetEnumDescription(OperationStatus.Updated),
+                statusCode: (int)StatusCode.OK,
+                data: new CurrencyDTO(
                     dbResult.Data.Id,
                     dbResult.Data.Code,
                     dbResult.Data.FullName,
@@ -146,9 +148,9 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
         catch (Exception ex)
         {
             return new FailedResponse(
-                (int)StatusCode.InternalServerError,
-                EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                $"[UpdateCurrency]: {ex.Message}"
+                statusCode: (int)StatusCode.InternalServerError,
+                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                message: $"[Update]: {ex.Message}"
             );
         }
     }
@@ -157,25 +159,25 @@ public class CurrencyService(ICurrencyRepository currencyRepository)
     {
         try
         {
-            var dbResult = await currencyRepository.Delete(id);
+            var dbResult = await currencyRepository.DeleteAsync(id);
 
             if (!dbResult.IsSuccess)
                 return new FailedResponse(
-                    (int)StatusCode.NotFound
+                    statusCode: (int)StatusCode.NotFound
                 );
 
             return new SuccessDataResponse<Guid>(
-                EnumHelper.GetEnumDisplayName(OperationStatus.Deleted),
-                EnumHelper.GetEnumDescription(OperationStatus.Deleted),
-                (int)StatusCode.OK,
-                id);
+                status: EnumHelper.GetEnumDisplayName(OperationStatus.Deleted),
+                message: EnumHelper.GetEnumDescription(OperationStatus.Deleted),
+                statusCode: (int)StatusCode.OK,
+                data: id);
         }
         catch (Exception ex)
         {
             return new FailedResponse(
-                (int)StatusCode.InternalServerError,
-                EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                $"[DeleteCurrency]: {ex.Message}"
+                statusCode: (int)StatusCode.InternalServerError,
+                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
+                message: $"[Delete]: {ex.Message}"
             );
         }
     }

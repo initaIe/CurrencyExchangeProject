@@ -4,7 +4,7 @@ namespace CurrencyExchange.Domain.Models;
 
 public class ExchangeRate
 {
-    public const int DecimalPrecision = 6;
+    public const int MaxDecimalPrecision = 6;
 
     private ExchangeRate(Guid id, Currency baseCurrency, Currency targetCurrency, decimal rate)
     {
@@ -19,22 +19,22 @@ public class ExchangeRate
     public Currency TargetCurrency { get; set; }
     public decimal Rate { get; set; }
 
-    public static (ExchangeRate? exchangeRate, string error) Create(Guid id, Currency baseCurrency,
+    public static (ExchangeRate? exchangeRate, List<string> errors) Create(Guid id, Currency baseCurrency,
         Currency targetCurrency, decimal rate)
     {
-        var error = string.Empty;
+        List<string> errors = [];
 
         // TODO: write extension for Guid validation
         if (Guid.Empty.Equals(id))
-            error += "Id cannot be null or empty. ";
+            errors.Add("Id cannot be null or empty");
 
-        if (DecimalHelper.HasValidDecimalPrecision(rate, DecimalPrecision))
-            error += "Rate must have 6 numbers after comma";
+        if (!DecimalHelper.HasValidDecimalPrecision(rate, MaxDecimalPrecision))
+            errors.Add("Rate must have maximum 6 numbers after comma");
 
-        if (!string.IsNullOrEmpty(error)) return (null, error);
+        if (errors.Count > 0) return (null, errors);
 
         var exchangeRate = new ExchangeRate(id, baseCurrency, targetCurrency, rate);
 
-        return (exchangeRate, error);
+        return (exchangeRate, errors);
     }
 }

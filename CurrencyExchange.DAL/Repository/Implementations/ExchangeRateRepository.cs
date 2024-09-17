@@ -8,9 +8,9 @@ using Microsoft.Data.Sqlite;
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class ExchangeRateRepository(DataBase db)
-    : IExchangeRateRepository
+    : IRepository<ExchangeRate, ExchangeRateEntity>
 {
-    public async Task<IResult<ExchangeRate>> Create(ExchangeRate exchangeRate)
+    public async Task<IResult<ExchangeRate>> CreateAsync(ExchangeRate exchangeRate)
     {
         var commandText = "INSERT INTO ExchangeRates (Id, BaseCurrencyId, TargetCurrencyId, Rate) " +
                           "VALUES (@Id, @BaseCurrencyId, @TargetCurrencyId, @Rate);";
@@ -32,7 +32,7 @@ public class ExchangeRateRepository(DataBase db)
             : new Result<ExchangeRate>();
     }
 
-    public async Task<IResult<ExchangeRateEntity>> GetById(Guid id)
+    public async Task<IResult<ExchangeRateEntity>> GetByIdAsync(Guid id)
     {
         var commandText = "SELECT " +
                           "er.Id AS ExchangeRateId, " +
@@ -64,17 +64,17 @@ public class ExchangeRateRepository(DataBase db)
                 {
                     Id = reader.GetString(1),
                     Code = reader.GetString(2),
-                    FullName = reader.GetString(4),
-                    Sign = reader.GetString(5)
+                    FullName = reader.GetString(3),
+                    Sign = reader.GetString(4)
                 },
                 TargetCurrency = new CurrencyEntity
                 {
-                    Id = reader.GetString(6),
-                    Code = reader.GetString(7),
-                    FullName = reader.GetString(8),
-                    Sign = reader.GetString(9)
+                    Id = reader.GetString(5),
+                    Code = reader.GetString(6),
+                    FullName = reader.GetString(7),
+                    Sign = reader.GetString(8)
                 },
-                Rate = reader.GetDecimal(10)
+                Rate = reader.GetDecimal(9)
             },
             parameters
         );
@@ -86,9 +86,23 @@ public class ExchangeRateRepository(DataBase db)
             : new Result<ExchangeRateEntity>();
     }
 
-    public async Task<IResult<IEnumerable<ExchangeRateEntity>>> GetAll(int limit, int offset)
+    public async Task<IResult<IEnumerable<ExchangeRateEntity>>> GetAllAsync(int limit, int offset)
     {
-        var commandText = "SELECT * FROM ExchangeRates";
+        var commandText = "SELECT " +
+                          "er.Id AS ExchangeRateId, " +
+                          "bc.Id AS BaseCurrencyId, " +
+                          "bc.Code AS BaseCurrencyCode, " +
+                          "bc.FullName AS BaseCurrencyFullName, " +
+                          "bc.Sign AS BaseCurrencySign, " +
+                          "tc.Id AS TargetCurrencyId, " +
+                          "tc.Code AS TargetCurrencyCode, " +
+                          "tc.FullName AS TargetCurrencyFullName, " +
+                          "tc.Sign AS TargetCurrencySign, " +
+                          "er.Rate " +
+                          "FROM  ExchangeRates er " +
+                          "JOIN  Currencies bc ON er.BaseCurrencyId = bc.Id " +
+                          "JOIN Currencies tc ON er.TargetCurrencyId = tc.Id ";
+        
         var parameters = Array.Empty<SqliteParameter>();
 
         if (limit > 0 && offset > 0)
@@ -112,17 +126,17 @@ public class ExchangeRateRepository(DataBase db)
                 {
                     Id = reader.GetString(1),
                     Code = reader.GetString(2),
-                    FullName = reader.GetString(4),
-                    Sign = reader.GetString(5)
+                    FullName = reader.GetString(3),
+                    Sign = reader.GetString(4)
                 },
                 TargetCurrency = new CurrencyEntity
                 {
-                    Id = reader.GetString(6),
-                    Code = reader.GetString(7),
-                    FullName = reader.GetString(8),
-                    Sign = reader.GetString(9)
+                    Id = reader.GetString(5),
+                    Code = reader.GetString(6),
+                    FullName = reader.GetString(7),
+                    Sign = reader.GetString(8)
                 },
-                Rate = reader.GetDecimal(10)
+                Rate = reader.GetDecimal(9)
             },
             parameters
         );
@@ -136,7 +150,7 @@ public class ExchangeRateRepository(DataBase db)
             : new Result<IEnumerable<ExchangeRateEntity>>();
     }
 
-    public async Task<IResult<Guid>> Delete(Guid id)
+    public async Task<IResult<Guid>> DeleteAsync(Guid id)
     {
         var commandText = "DELETE FROM ExchangeRates " +
                           "WHERE Id=@Id;";
@@ -155,7 +169,7 @@ public class ExchangeRateRepository(DataBase db)
             : new Result<Guid>();
     }
 
-    public async Task<IResult<ExchangeRate>> Update(ExchangeRate exchangeRate)
+    public async Task<IResult<ExchangeRate>> UpdateAsync(Guid id, ExchangeRate exchangeRate)
     {
         var commandText = "UPDATE ExchangeRates " +
                           "SET BaseCurrencyId = @BaseCurrencyId, " +

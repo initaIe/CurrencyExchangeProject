@@ -8,9 +8,9 @@ using Microsoft.Data.Sqlite;
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class CurrencyRepository(DataBase db)
-    : ICurrencyRepository
+    : IRepository<Currency, CurrencyEntity>
 {
-    public async Task<IResult<Currency>> Create(Currency currency)
+    public async Task<IResult<Currency>> CreateAsync(Currency currency)
     {
         var commandText = "INSERT INTO Currencies (Id, Code, FullName, Sign) " +
                           "VALUES (@Id, @Code, @FullName, @Sign);";
@@ -32,7 +32,7 @@ public class CurrencyRepository(DataBase db)
             : new Result<Currency>();
     }
 
-    public async Task<IResult<CurrencyEntity>> GetById(Guid id)
+    public async Task<IResult<CurrencyEntity>> GetByIdAsync(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -60,7 +60,7 @@ public class CurrencyRepository(DataBase db)
             : new Result<CurrencyEntity>();
     }
 
-    public async Task<IResult<IEnumerable<CurrencyEntity>>> GetAll
+    public async Task<IResult<IEnumerable<CurrencyEntity>>> GetAllAsync
         (int limit, int offset)
     {
         var commandText = "SELECT * FROM Currencies";
@@ -99,7 +99,7 @@ public class CurrencyRepository(DataBase db)
             : new Result<IEnumerable<CurrencyEntity>>();
     }
 
-    public async Task<IResult<Guid>> Delete(Guid id)
+    public async Task<IResult<Guid>> DeleteAsync(Guid id)
     {
         var commandText = "DELETE FROM Currencies " +
                           "WHERE Id=@Id;";
@@ -118,7 +118,7 @@ public class CurrencyRepository(DataBase db)
             : new Result<Guid>();
     }
 
-    public async Task<IResult<Currency>> Update(Guid id, Currency currency)
+    public async Task<IResult<Currency>> UpdateAsync(Guid id, Currency currency)
     {
         var commandText = "UPDATE Currencies " +
                           "SET Code = @Code, " +

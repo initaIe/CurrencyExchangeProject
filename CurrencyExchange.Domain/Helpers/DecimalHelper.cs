@@ -7,8 +7,8 @@ public static class DecimalHelper
         return BitConverter.GetBytes(decimal.GetBits(value)[3])[2];
     }
 
-    public static bool HasValidDecimalPrecision(decimal value, int decimalPrecision)
+    public static bool HasValidDecimalPrecision(decimal value, int maxDecimalPrecision)
     {
-        return GetCountNumbersAfterComma(value) <= decimalPrecision;
+        return GetCountNumbersAfterComma(value) <= maxDecimalPrecision;
     }
 }
