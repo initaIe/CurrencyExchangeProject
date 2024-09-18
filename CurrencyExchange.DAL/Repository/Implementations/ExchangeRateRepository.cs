@@ -3,6 +3,8 @@ using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Result;
+using CurrencyExchange.Domain.Result.Implementations;
+using CurrencyExchange.Domain.Result.Interfaces;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
@@ -28,8 +30,8 @@ public class ExchangeRateRepository(DataBase db)
         var isCreated = affectedRows > 0;
 
         return isCreated
-            ? new Result<ExchangeRate>(exchangeRate)
-            : new Result<ExchangeRate>();
+            ? Result<ExchangeRate>.Success(exchangeRate)
+            : Result<ExchangeRate>.Failure();
     }
 
     public async Task<IResult<ExchangeRateEntity>> GetByIdAsync(Guid id)
@@ -82,8 +84,8 @@ public class ExchangeRateRepository(DataBase db)
         var isReceived = exchangeRate != null;
 
         return isReceived
-            ? new Result<ExchangeRateEntity>(exchangeRate!)
-            : new Result<ExchangeRateEntity>();
+            ? Result<ExchangeRateEntity>.Success(exchangeRate!)
+            : Result<ExchangeRateEntity>.Failure();
     }
 
     public async Task<IResult<IEnumerable<ExchangeRateEntity>>> GetAllAsync(int limit, int offset)
@@ -102,7 +104,7 @@ public class ExchangeRateRepository(DataBase db)
                           "FROM  ExchangeRates er " +
                           "JOIN  Currencies bc ON er.BaseCurrencyId = bc.Id " +
                           "JOIN Currencies tc ON er.TargetCurrencyId = tc.Id ";
-        
+
         var parameters = Array.Empty<SqliteParameter>();
 
         if (limit > 0 && offset > 0)
@@ -146,8 +148,8 @@ public class ExchangeRateRepository(DataBase db)
         var isReceived = exchangeRatesList.Count > 0;
 
         return isReceived
-            ? new Result<IEnumerable<ExchangeRateEntity>>(exchangeRatesList)
-            : new Result<IEnumerable<ExchangeRateEntity>>();
+            ? Result<IEnumerable<ExchangeRateEntity>>.Success(exchangeRatesList)
+            : Result<IEnumerable<ExchangeRateEntity>>.Failure();
     }
 
     public async Task<IResult<Guid>> DeleteAsync(Guid id)
@@ -165,8 +167,8 @@ public class ExchangeRateRepository(DataBase db)
         var isDeleted = affectedRows > 0;
 
         return isDeleted
-            ? new Result<Guid>(id)
-            : new Result<Guid>();
+            ? Result<Guid>.Success(id)
+            : Result<Guid>.Failure();
     }
 
     public async Task<IResult<ExchangeRate>> UpdateAsync(Guid id, ExchangeRate exchangeRate)
@@ -190,7 +192,7 @@ public class ExchangeRateRepository(DataBase db)
         var isUpdated = affectedRows > 0;
 
         return isUpdated
-            ? new Result<ExchangeRate>(exchangeRate)
-            : new Result<ExchangeRate>();
+            ? Result<ExchangeRate>.Success(exchangeRate)
+            : Result<ExchangeRate>.Failure();
     }
 }

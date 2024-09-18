@@ -23,7 +23,7 @@ public class ExchangeRateMapper
                 dto.TargetCurrency.Sign),
             dto.Rate);
     }
-    
+
     public static CreateExchangeRateDTO ToCreateExchangeRateDTO(CreateExchangeRateRequest request)
     {
         return new CreateExchangeRateDTO(
@@ -31,7 +31,7 @@ public class ExchangeRateMapper
             request.TargetCurrencyId,
             request.Rate);
     }
-    
+
     public static UpdateExchangeRateDTO ToUpdateExchangeRateDTO(UpdateExchangeRateRequest request)
     {
         return new UpdateExchangeRateDTO(

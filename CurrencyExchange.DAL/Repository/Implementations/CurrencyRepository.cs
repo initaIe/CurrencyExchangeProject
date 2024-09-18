@@ -3,6 +3,8 @@ using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Result;
+using CurrencyExchange.Domain.Result.Implementations;
+using CurrencyExchange.Domain.Result.Interfaces;
 using Microsoft.Data.Sqlite;
 
 namespace CurrencyExchange.DAL.Repository.Implementations;
@@ -28,8 +30,8 @@ public class CurrencyRepository(DataBase db)
         var isCreated = affectedRows > 0;
 
         return isCreated
-            ? new Result<Currency>(currency)
-            : new Result<Currency>();
+            ? Result<Currency>.Success(currency)
+            : Result<Currency>.Failure();
     }
 
     public async Task<IResult<CurrencyEntity>> GetByIdAsync(Guid id)
@@ -56,8 +58,8 @@ public class CurrencyRepository(DataBase db)
         var isReceived = currencyEntity != null;
 
         return isReceived
-            ? new Result<CurrencyEntity>(currencyEntity!)
-            : new Result<CurrencyEntity>();
+            ? Result<CurrencyEntity>.Success(currencyEntity!)
+            : Result<CurrencyEntity>.Failure();
     }
 
     public async Task<IResult<IEnumerable<CurrencyEntity>>> GetAllAsync
@@ -95,8 +97,8 @@ public class CurrencyRepository(DataBase db)
         var isReceived = currenciesList.Count > 0;
 
         return isReceived
-            ? new Result<IEnumerable<CurrencyEntity>>(currenciesList)
-            : new Result<IEnumerable<CurrencyEntity>>();
+            ? Result<IEnumerable<CurrencyEntity>>.Success(currenciesList)
+            : Result<IEnumerable<CurrencyEntity>>.Failure();
     }
 
     public async Task<IResult<Guid>> DeleteAsync(Guid id)
@@ -114,8 +116,8 @@ public class CurrencyRepository(DataBase db)
         var isDeleted = affectedRows > 0;
 
         return isDeleted
-            ? new Result<Guid>(id)
-            : new Result<Guid>();
+            ? Result<Guid>.Success(id)
+            : Result<Guid>.Failure();
     }
 
     public async Task<IResult<Currency>> UpdateAsync(Guid id, Currency currency)
@@ -139,7 +141,7 @@ public class CurrencyRepository(DataBase db)
         var isUpdated = affectedRows > 0;
 
         return isUpdated
-            ? new Result<Currency>(currency)
-            : new Result<Currency>();
+            ? Result<Currency>.Success(currency)
+            : Result<Currency>.Failure();
     }
 }

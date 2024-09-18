@@ -1,6 +1,4 @@
-﻿using CurrencyExchange.Contracts.Currency;
-using CurrencyExchange.Contracts.Currency.DTOs;
-using CurrencyExchange.Contracts.ExchangeRate;
+﻿using CurrencyExchange.Contracts.Currency.DTOs;
 using CurrencyExchange.Contracts.ExchangeRate.DTOs;
 using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
@@ -9,271 +7,125 @@ using CurrencyExchange.Domain.Helpers;
 using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Response.Implementations;
 using CurrencyExchange.Domain.Response.Interfaces;
+using CurrencyExchange.Service.Factories;
 using CurrencyExchange.Service.Interfaces;
+using CurrencyExchange.Service.Mappers;
 
 namespace CurrencyExchange.Service.Implementations;
 
 public class ExchangeRateService(
     IRepository<ExchangeRate, ExchangeRateEntity> exchangeRateRepository,
-    IRepository<Currency, CurrencyEntity> currencyRepository) 
-    : IService<CreateExchangeRateDTO, UpdateExchangeRateDTO>
+    ExchangeRateFactory exchangeRateFactory)
+    : IExchangeRateService
 {
-    public async Task<IResponse> CreateAsync(CreateExchangeRateDTO dto)
+    public async Task<IBaseResponse<ExchangeRateDTO>> CreateAsync(CreateExchangeRateDTO dto)
     {
         try
         {
-            var baseCurrencyDbResult = await currencyRepository.GetByIdAsync(dto.BaseCurrencyId);
-            var targetCurrencyDbResult = await currencyRepository.GetByIdAsync(dto.TargetCurrencyId);
+            var domainModelResult = await exchangeRateFactory.Create(
+                null,
+                dto.BaseCurrencyId,
+                dto.TargetCurrencyId,
+                dto.Rate);
             
-            var baseCurrencyDomainResult = Currency.Create(
-                id: Guid.Parse(baseCurrencyDbResult.Data.Id),
-                code: baseCurrencyDbResult.Data.Code,
-                fullName: baseCurrencyDbResult.Data.FullName,
-                sign: baseCurrencyDbResult.Data.Sign
-            );
-            
-            if (baseCurrencyDomainResult.errors.Count > 0 || baseCurrencyDomainResult.currency == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: baseCurrencyDomainResult.errors);
-            
-            var targetCurrencyDomainResult = Currency.Create(
-                id: Guid.Parse(targetCurrencyDbResult.Data.Id),
-                code: targetCurrencyDbResult.Data.Code,
-                fullName: targetCurrencyDbResult.Data.FullName,
-                sign: targetCurrencyDbResult.Data.Sign
-            );
-            
-            if (targetCurrencyDomainResult.errors.Count > 0 || targetCurrencyDomainResult.currency == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: targetCurrencyDomainResult.errors);
-            
-            var exchangeRateDomainResult = ExchangeRate.Create(
-                id: Guid.NewGuid(),
-                baseCurrency: baseCurrencyDomainResult.currency,
-                targetCurrency: targetCurrencyDomainResult.currency,
-                rate: dto.Rate);
-            
-            if (exchangeRateDomainResult.errors.Count > 0 || exchangeRateDomainResult.exchangeRate == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: exchangeRateDomainResult.errors);
+            if (!domainModelResult.IsSuccess || domainModelResult.Data == null)
+                return BaseResponse<ExchangeRateDTO>.UnprocessableEntity(domainModelResult.Errors);
 
-            var dbResult = await exchangeRateRepository.CreateAsync(exchangeRateDomainResult.exchangeRate);
-    
+            var dbResult = await exchangeRateRepository.CreateAsync(domainModelResult.Data);
+            
             if (!dbResult.IsSuccess || dbResult.Data == null)
-                return new FailedResponse(
-                    statusCode: (int)StatusCode.Conflict
-                );
-    
-            return new SuccessDataResponse<ExchangeRateDTO>(
-                status: EnumHelper.GetEnumDisplayName(OperationStatus.Created),
-                message: EnumHelper.GetEnumDescription(OperationStatus.Created),
-                statusCode: (int)StatusCode.Created,
-                data: new ExchangeRateDTO(
-                    Id: exchangeRateDomainResult.exchangeRate.Id,
-                    BaseCurrency: new CurrencyDTO(
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Id,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Code,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.FullName,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Sign),
-                    TargetCurrency: new CurrencyDTO(
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Id,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Code,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.FullName,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Sign),
-                    Rate: exchangeRateDomainResult.exchangeRate.Rate)
-            );
+                return BaseResponse<ExchangeRateDTO>.Conflict();
+            
+            var exchangeRateDTO = ExchangeRateMapper.ToExchangeRateDTO(dbResult.Data);
+            
+            return BaseResponse<ExchangeRateDTO>.Created(exchangeRateDTO);
         }
         catch (Exception ex)
         {
-            return new FailedResponse(
-                statusCode: (int)StatusCode.InternalServerError,
-                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                message: $"[Create]: {ex.Message}"
-            );
+            return BaseResponse<ExchangeRateDTO>.InternalServerError();
         }
     }
-    public async Task<IResponse> GetAllAsync(int pageSize, int pageNumber)
+
+    public async Task<IBaseResponse<IEnumerable<ExchangeRateDTO>>> GetAllAsync(int pageSize, int pageNumber)
     {
         try
         {
             var dbResult = await exchangeRateRepository.GetAllAsync(pageSize, pageNumber);
-    
-            if (!dbResult.IsSuccess || dbResult.Data == null)
-                return new FailedResponse(
-                    statusCode: (int)StatusCode.NotFound
-                );
 
-            return new SuccessDataResponse<IEnumerable<ExchangeRateDTO>>(
-                status: EnumHelper.GetEnumDisplayName(OperationStatus.Received),
-                message: EnumHelper.GetEnumDescription(OperationStatus.Received),
-                statusCode: (int)StatusCode.OK,
-                data: dbResult.Data.Select(x => new ExchangeRateDTO(
-                    Id: Guid.Parse(x.Id),
-                    BaseCurrency: new CurrencyDTO(
-                        Guid.Parse(x.BaseCurrency.Id),
-                        x.BaseCurrency.Code,
-                        x.BaseCurrency.FullName,
-                        x.BaseCurrency.Sign),
-                    TargetCurrency: new CurrencyDTO(
-                        Guid.Parse(x.TargetCurrency.Id),
-                        x.TargetCurrency.Code,
-                        x.TargetCurrency.FullName,
-                        x.TargetCurrency.Sign),
-                    Rate: x.Rate)
-                ));
+            if (!dbResult.IsSuccess || dbResult.Data == null)
+                return BaseResponse<IEnumerable<ExchangeRateDTO>>.NotFound();
+            
+            var dto = dbResult.Data.Select(ExchangeRateMapper.ToExchangeRateDTO);
+
+            return BaseResponse<IEnumerable<ExchangeRateDTO>>.Ok(dto);
         }
         catch (Exception ex)
         {
-            return new FailedResponse(
-                statusCode: (int)StatusCode.InternalServerError,
-                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                message: $"[GetAll]: {ex.Message}"
-            );
+            return BaseResponse<IEnumerable<ExchangeRateDTO>>.InternalServerError();
         }
     }
-    public async Task<IResponse> GetByIdAsync(Guid id)
+
+    public async Task<IBaseResponse<ExchangeRateDTO>> GetByIdAsync(Guid id)
     {
         try
         {
             var dbResult = await exchangeRateRepository.GetByIdAsync(id);
-    
+
             if (!dbResult.IsSuccess || dbResult.Data == null)
-                return new FailedResponse(
-                    statusCode: (int)StatusCode.NotFound
-                );
-    
-    
-            return new SuccessDataResponse<ExchangeRateDTO>(
-                status: EnumHelper.GetEnumDisplayName(OperationStatus.Received),
-                message: EnumHelper.GetEnumDescription(OperationStatus.Received),
-                statusCode: (int)StatusCode.OK,
-                data: new ExchangeRateDTO(
-                    Id: Guid.Parse(dbResult.Data.Id),
-                    BaseCurrency: new CurrencyDTO(
-                        Guid.Parse(dbResult.Data.BaseCurrency.Id),
-                        dbResult.Data.BaseCurrency.Code,
-                        dbResult.Data.BaseCurrency.FullName,
-                        dbResult.Data.BaseCurrency.Sign),
-                    TargetCurrency: new CurrencyDTO(
-                        Guid.Parse(dbResult.Data.TargetCurrency.Id),
-                        dbResult.Data.TargetCurrency.Code,
-                        dbResult.Data.TargetCurrency.FullName,
-                        dbResult.Data.TargetCurrency.Sign),
-                    Rate: dbResult.Data.Rate));
+                return BaseResponse<ExchangeRateDTO>.NotFound();
+            
+            var dto = ExchangeRateMapper.ToExchangeRateDTO(dbResult.Data);
+            
+            return BaseResponse<ExchangeRateDTO>.Ok(dto);
         }
         catch (Exception ex)
         {
-            return new FailedResponse(
-                statusCode: (int)StatusCode.InternalServerError,
-                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                message: $"[GetById]: {ex.Message}"
-            );
+            return BaseResponse<ExchangeRateDTO>.InternalServerError();
         }
     }
-    public async Task<IResponse> UpdateAsync(Guid id, UpdateExchangeRateDTO dto)
+
+    public async Task<IBaseResponse<ExchangeRateDTO>> UpdateAsync(Guid id, UpdateExchangeRateDTO dto)
     {
         try
         {
-            var baseCurrencyDbResult = await currencyRepository.GetByIdAsync(dto.BaseCurrencyId);
-            var targetCurrencyDbResult = await currencyRepository.GetByIdAsync(dto.TargetCurrencyId);
+            var domainModelResult = await exchangeRateFactory.Create(
+                id,
+                dto.BaseCurrencyId,
+                dto.TargetCurrencyId,
+                dto.Rate);
             
-            var baseCurrencyDomainResult = Currency.Create(
-                id: Guid.Parse(baseCurrencyDbResult.Data.Id),
-                code: baseCurrencyDbResult.Data.Code,
-                fullName: baseCurrencyDbResult.Data.FullName,
-                sign: baseCurrencyDbResult.Data.Sign
-            );
+            if (!domainModelResult.IsSuccess || domainModelResult.Data == null)
+                return BaseResponse<ExchangeRateDTO>.UnprocessableEntity(domainModelResult.Errors);
             
-            if (baseCurrencyDomainResult.errors.Count > 0 || baseCurrencyDomainResult.currency == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: baseCurrencyDomainResult.errors);
+            var dbResult = await exchangeRateRepository.UpdateAsync(id, domainModelResult.Data);
             
-            var targetCurrencyDomainResult = Currency.Create(
-                id: Guid.Parse(targetCurrencyDbResult.Data.Id),
-                code: targetCurrencyDbResult.Data.Code,
-                fullName: targetCurrencyDbResult.Data.FullName,
-                sign: targetCurrencyDbResult.Data.Sign
-            );
-            
-            if (targetCurrencyDomainResult.errors.Count > 0 || targetCurrencyDomainResult.currency == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: targetCurrencyDomainResult.errors);
-            
-            var exchangeRateDomainResult = ExchangeRate.Create(
-                id: Guid.NewGuid(),
-                baseCurrency: baseCurrencyDomainResult.currency,
-                targetCurrency: targetCurrencyDomainResult.currency,
-                rate: dto.Rate);
-            
-            if (exchangeRateDomainResult.errors.Count > 0 || exchangeRateDomainResult.exchangeRate == null)
-                return new FailedErrorResponse(
-                    statusCode: (int)StatusCode.UnprocessableEntity,
-                    errors: exchangeRateDomainResult.errors);
-            
-            var dbResult = await exchangeRateRepository.UpdateAsync(id, exchangeRateDomainResult.exchangeRate);
-    
             if (!dbResult.IsSuccess || dbResult.Data == null)
-                return new FailedResponse(
-                    statusCode: (int)StatusCode.Conflict
-                );
-    
-            return new SuccessDataResponse<ExchangeRateDTO>(
-                status: EnumHelper.GetEnumDisplayName(OperationStatus.Created),
-                message: EnumHelper.GetEnumDescription(OperationStatus.Created),
-                statusCode: (int)StatusCode.Created,
-                data: new ExchangeRateDTO(
-                    Id: exchangeRateDomainResult.exchangeRate.Id,
-                    BaseCurrency: new CurrencyDTO(
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Id,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Code,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.FullName,
-                        exchangeRateDomainResult.exchangeRate.BaseCurrency.Sign),
-                    TargetCurrency: new CurrencyDTO(
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Id,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Code,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.FullName,
-                        exchangeRateDomainResult.exchangeRate.TargetCurrency.Sign),
-                    Rate: exchangeRateDomainResult.exchangeRate.Rate)
-            );
+                return BaseResponse<ExchangeRateDTO>.Conflict();
+            
+            var exchangeRateDTO = ExchangeRateMapper.ToExchangeRateDTO(dbResult.Data);
+            
+            return BaseResponse<ExchangeRateDTO>.Ok(exchangeRateDTO);
         }
         catch (Exception ex)
         {
-            return new FailedResponse(
-                statusCode: (int)StatusCode.InternalServerError,
-                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                message: $"[Update]: {ex.Message}"
-            );
+            return BaseResponse<ExchangeRateDTO>.InternalServerError();
         }
     }
-    public async Task<IResponse> DeleteAsync(Guid id)
+
+    public async Task<IBaseResponse<Guid>> DeleteAsync(Guid id)
     {
         try
         {
             var dbResult = await exchangeRateRepository.DeleteAsync(id);
-    
+
             if (!dbResult.IsSuccess)
-                return new FailedResponse(
-                    statusCode: (int)StatusCode.NotFound
-                );
-    
-            return new SuccessDataResponse<Guid>(
-                status: EnumHelper.GetEnumDisplayName(OperationStatus.Deleted),
-                message: EnumHelper.GetEnumDescription(OperationStatus.Deleted),
-                statusCode: (int)StatusCode.OK,
-                data: id);
+                return BaseResponse<Guid>.NotFound();
+
+            return BaseResponse<Guid>.Ok(id);
         }
         catch (Exception ex)
         {
-            return new FailedResponse(
-                statusCode: (int)StatusCode.InternalServerError,
-                status: EnumHelper.GetEnumDescription(OperationStatus.Failed),
-                message: $"[Delete]: {ex.Message}"
-            );
+            return BaseResponse<Guid>.InternalServerError();
         }
     }
 }

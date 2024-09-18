@@ -1,4 +1,4 @@
-﻿namespace CurrencyExchange.Domain.Result;
+﻿namespace CurrencyExchange.Domain.Result.Interfaces;
 
 public interface IResult<T>
 {

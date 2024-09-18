@@ -2,4 +2,8 @@
 
 namespace CurrencyExchange.Contracts.ExchangeRate.Responses;
 
-public record ExchangeRateResponse(Guid Id, CurrencyResponse BaseCurrency, CurrencyResponse TargetCurrency, decimal Rate);
+public record ExchangeRateResponse(
+    Guid Id,
+    CurrencyResponse BaseCurrency,
+    CurrencyResponse TargetCurrency,
+    decimal Rate);

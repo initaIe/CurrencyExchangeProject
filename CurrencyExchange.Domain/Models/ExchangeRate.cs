@@ -1,4 +1,6 @@
 ﻿using CurrencyExchange.Domain.Helpers;
+using CurrencyExchange.Domain.Result;
+using CurrencyExchange.Domain.Result.Implementations;
 
 namespace CurrencyExchange.Domain.Models;
 
@@ -19,22 +21,22 @@ public class ExchangeRate
     public Currency TargetCurrency { get; set; }
     public decimal Rate { get; set; }
 
-    public static (ExchangeRate? exchangeRate, List<string> errors) Create(Guid id, Currency baseCurrency,
+    public static DomainModelCreationResult<ExchangeRate> Create(Guid id, Currency baseCurrency,
         Currency targetCurrency, decimal rate)
     {
         List<string> errors = [];
 
-        // TODO: write extension for Guid validation
         if (Guid.Empty.Equals(id))
-            errors.Add("Id cannot be null or empty");
+            errors.Add("Id cannot be null or empty.");
 
         if (!DecimalHelper.HasValidDecimalPrecision(rate, MaxDecimalPrecision))
-            errors.Add("Rate must have maximum 6 numbers after comma");
+            rate = Math.Round(rate, MaxDecimalPrecision);
+        
 
-        if (errors.Count > 0) return (null, errors);
+        if (errors.Count > 0) return DomainModelCreationResult<ExchangeRate>.Failure(errors);
 
         var exchangeRate = new ExchangeRate(id, baseCurrency, targetCurrency, rate);
 
-        return (exchangeRate, errors);
+        return DomainModelCreationResult<ExchangeRate>.Success(exchangeRate);
     }
 }

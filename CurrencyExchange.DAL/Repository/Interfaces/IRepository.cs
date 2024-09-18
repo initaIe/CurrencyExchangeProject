@@ -1,4 +1,5 @@
 ﻿using CurrencyExchange.Domain.Result;
+using CurrencyExchange.Domain.Result.Interfaces;
 
 namespace CurrencyExchange.DAL.Repository.Interfaces;
 

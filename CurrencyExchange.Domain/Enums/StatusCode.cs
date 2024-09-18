@@ -11,9 +11,8 @@ public enum StatusCode
     [Display(Name = "Created")] [Description("The request was successful, and a new resource has been created")]
     Created = 201,
 
-    // No Content
-    [Display(Name = "Deleted")] [Description("The request was successful, and resource has been deleted")]
-    Deleted = 204,
+    [Display(Name = "OkNoContent")] [Description("The request was successful")]
+    OkNoContent = 204,
 
     [Display(Name = "BadRequest")] [Description("The request was malformed or invalid")]
     BadRequest = 400,
