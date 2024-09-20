@@ -1,8 +1,6 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Models;
-using CurrencyExchange.Domain.Result;
 using CurrencyExchange.Domain.Result.Implementations;
 using CurrencyExchange.Domain.Result.Interfaces;
 using Microsoft.Data.Sqlite;
@@ -10,7 +8,7 @@ using Microsoft.Data.Sqlite;
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class CurrencyRepository(DataBase db)
-    : IRepository<Currency, CurrencyEntity>
+    : ICurrencyRepository
 {
     public async Task<IResult<Currency>> CreateAsync(Currency currency)
     {
@@ -31,10 +29,10 @@ public class CurrencyRepository(DataBase db)
 
         return isCreated
             ? Result<Currency>.Success(currency)
-            : Result<Currency>.Failure();
+            : Result<Currency>.Failure("[DB] Create currency error: conflict.");
     }
 
-    public async Task<IResult<CurrencyEntity>> GetByIdAsync(Guid id)
+    public async Task<IResult<Currency>> GetByIdAsync(Guid id)
     {
         var commandText = "SELECT * FROM Currencies WHERE Id = @Id;";
 
@@ -45,24 +43,49 @@ public class CurrencyRepository(DataBase db)
 
         var currencyEntity = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader => new CurrencyEntity
-            {
-                Id = reader.GetString(0),
-                Code = reader.GetString(1),
-                FullName = reader.GetString(2),
-                Sign = reader.GetString(3)
-            },
+            reader => Currency.CreateWithoutValidation(
+                Guid.Parse(reader.GetString(0)),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)),
             parameters
         );
 
         var isReceived = currencyEntity != null;
 
         return isReceived
-            ? Result<CurrencyEntity>.Success(currencyEntity!)
-            : Result<CurrencyEntity>.Failure();
+            ? Result<Currency>.Success(currencyEntity!)
+            : Result<Currency>.Failure("[DB] GetById currency error: not found.");
     }
 
-    public async Task<IResult<IEnumerable<CurrencyEntity>>> GetAllAsync
+    public async Task<IResult<Currency>> GetByCodeAsync(string code)
+    {
+        var commandText = "SELECT * FROM Currencies WHERE Code = @Code;";
+
+        var parameters = new[]
+        {
+            new SqliteParameter("@Code", code)
+        };
+
+        var currencyEntity = await db.QuerySingleOrDefaultAsync(
+            commandText,
+            reader => Currency.CreateWithoutValidation
+            (
+                Guid.Parse(reader.GetString(0)),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)),
+            parameters
+        );
+
+        var isReceived = currencyEntity != null;
+
+        return isReceived
+            ? Result<Currency>.Success(currencyEntity!)
+            : Result<Currency>.Failure("[DB] GetByCode error: not found.");
+    }
+
+    public async Task<IResult<IEnumerable<Currency>>> GetAllAsync
         (int limit, int offset)
     {
         var commandText = "SELECT * FROM Currencies";
@@ -82,13 +105,13 @@ public class CurrencyRepository(DataBase db)
 
         var currencyEntities = await db.QueryAsync(
             commandText,
-            reader => new CurrencyEntity
-            {
-                Id = reader.GetString(0),
-                Code = reader.GetString(1),
-                FullName = reader.GetString(2),
-                Sign = reader.GetString(3)
-            },
+            reader => Currency.CreateWithoutValidation
+            (
+                Guid.Parse(reader.GetString(0)),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)
+            ),
             parameters
         );
 
@@ -97,8 +120,8 @@ public class CurrencyRepository(DataBase db)
         var isReceived = currenciesList.Count > 0;
 
         return isReceived
-            ? Result<IEnumerable<CurrencyEntity>>.Success(currenciesList)
-            : Result<IEnumerable<CurrencyEntity>>.Failure();
+            ? Result<IEnumerable<Currency>>.Success(currenciesList)
+            : Result<IEnumerable<Currency>>.Failure("[DB] GetAll currencies error: not found.");
     }
 
     public async Task<IResult<Guid>> DeleteAsync(Guid id)
@@ -117,7 +140,7 @@ public class CurrencyRepository(DataBase db)
 
         return isDeleted
             ? Result<Guid>.Success(id)
-            : Result<Guid>.Failure();
+            : Result<Guid>.Failure("[DB] Delete currency error: not found.");
     }
 
     public async Task<IResult<Currency>> UpdateAsync(Guid id, Currency currency)
@@ -130,7 +153,7 @@ public class CurrencyRepository(DataBase db)
 
         var parameters = new[]
         {
-            new SqliteParameter("@Id", currency.Id),
+            new SqliteParameter("@Id", id),
             new SqliteParameter("@Code", currency.Code),
             new SqliteParameter("@FullName", currency.FullName),
             new SqliteParameter("@Sign", currency.Sign)
@@ -142,6 +165,6 @@ public class CurrencyRepository(DataBase db)
 
         return isUpdated
             ? Result<Currency>.Success(currency)
-            : Result<Currency>.Failure();
+            : Result<Currency>.Failure("[DB] Update currency error: conflict/not found.");
     }
 }

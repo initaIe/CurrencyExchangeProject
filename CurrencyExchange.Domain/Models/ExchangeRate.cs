@@ -1,5 +1,4 @@
 ﻿using CurrencyExchange.Domain.Helpers;
-using CurrencyExchange.Domain.Result;
 using CurrencyExchange.Domain.Result.Implementations;
 
 namespace CurrencyExchange.Domain.Models;
@@ -21,22 +20,30 @@ public class ExchangeRate
     public Currency TargetCurrency { get; set; }
     public decimal Rate { get; set; }
 
-    public static DomainModelCreationResult<ExchangeRate> Create(Guid id, Currency baseCurrency,
+    // Используется для создания доменной модели при создании нового объекта, который требуется провалидировать
+    public static Result<ExchangeRate> Create(Guid id, Currency baseCurrency,
         Currency targetCurrency, decimal rate)
     {
         List<string> errors = [];
 
-        if (Guid.Empty.Equals(id))
-            errors.Add("Id cannot be null or empty.");
+        var guidEmptyValidation = GuidValidator.Validate(id);
+        ResultHelper.AddErrorsIfNotSuccess(guidEmptyValidation, errors);
 
         if (!DecimalHelper.HasValidDecimalPrecision(rate, MaxDecimalPrecision))
             rate = Math.Round(rate, MaxDecimalPrecision);
-        
 
-        if (errors.Count > 0) return DomainModelCreationResult<ExchangeRate>.Failure(errors);
+
+        if (errors.Count > 0) return Result<ExchangeRate>.Failure(errors);
 
         var exchangeRate = new ExchangeRate(id, baseCurrency, targetCurrency, rate);
 
-        return DomainModelCreationResult<ExchangeRate>.Success(exchangeRate);
+        return Result<ExchangeRate>.Success(exchangeRate);
+    }
+
+    // Используется для создания доменной модели при получении из БД уже ВАЛИДНОГО ОБЪЕКТА
+    public static ExchangeRate CreateWithoutValidation(Guid id, Currency baseCurrency,
+        Currency targetCurrency, decimal rate)
+    {
+        return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 }

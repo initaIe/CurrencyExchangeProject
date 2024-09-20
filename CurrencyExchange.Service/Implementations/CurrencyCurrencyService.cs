@@ -1,9 +1,5 @@
 ﻿using CurrencyExchange.Contracts.Currency.DTOs;
-using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
-using CurrencyExchange.Domain.Enums;
-using CurrencyExchange.Domain.Helpers;
-using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Response.Implementations;
 using CurrencyExchange.Domain.Response.Interfaces;
 using CurrencyExchange.Service.Factories;
@@ -12,26 +8,27 @@ using CurrencyExchange.Service.Mappers;
 
 namespace CurrencyExchange.Service.Implementations;
 
-public class CurrencyCurrencyService(IRepository<Currency, CurrencyEntity> currencyRepository, CurrencyFactory
-    currencyFactory)
+public class CurrencyCurrencyService(
+    ICurrencyRepository currencyRepository,
+    CurrencyFactory currencyFactory)
     : ICurrencyService
 {
     public async Task<IBaseResponse<CurrencyDTO>> CreateAsync(CreateCurrencyDTO dto)
     {
         try
         {
-            var domainResult = currencyFactory.Create(dto.Code, dto.FullName, dto.Sign);
+            var factoryResult = currencyFactory.Create(dto.Code, dto.FullName, dto.Sign);
 
-            if (!domainResult.IsSuccess || domainResult.Data == null)
-                return BaseResponse<CurrencyDTO>.UnprocessableEntity(domainResult.Errors);
+            if (!factoryResult.IsSuccess)
+                return BaseResponse<CurrencyDTO>.UnprocessableEntity(factoryResult.Errors!);
 
-            var dbResult = await currencyRepository.CreateAsync(domainResult.Data);
+            var dbResult = await currencyRepository.CreateAsync(factoryResult.Data!);
 
-            if (!dbResult.IsSuccess || dbResult.Data == null)
+            if (!dbResult.IsSuccess)
                 return BaseResponse<CurrencyDTO>.Conflict();
 
-            var currencyDTO = CurrencyMapper.ToCurrencyDTO(dbResult.Data);
-            
+            var currencyDTO = CurrencyMapper.ToCurrencyDTO(dbResult.Data!);
+
             return BaseResponse<CurrencyDTO>.Created(currencyDTO);
         }
         catch (Exception ex)
@@ -46,11 +43,11 @@ public class CurrencyCurrencyService(IRepository<Currency, CurrencyEntity> curre
         {
             var dbResult = await currencyRepository.GetAllAsync(pageSize, pageNumber);
 
-            if (!dbResult.IsSuccess || dbResult.Data == null)
+            if (!dbResult.IsSuccess)
                 return BaseResponse<IEnumerable<CurrencyDTO>>.NotFound();
 
-            var currencyDTOs = dbResult.Data.Select(CurrencyMapper.ToCurrencyDTO);
-            
+            var currencyDTOs = dbResult.Data!.Select(CurrencyMapper.ToCurrencyDTO);
+
             return BaseResponse<IEnumerable<CurrencyDTO>>.Ok(currencyDTOs);
         }
         catch (Exception ex)
@@ -65,11 +62,30 @@ public class CurrencyCurrencyService(IRepository<Currency, CurrencyEntity> curre
         {
             var dbResult = await currencyRepository.GetByIdAsync(id);
 
-            if (!dbResult.IsSuccess || dbResult.Data == null)
+            if (!dbResult.IsSuccess)
                 return BaseResponse<CurrencyDTO>.NotFound();
 
-            var dto = CurrencyMapper.ToCurrencyDTO(dbResult.Data);
-            
+            var dto = CurrencyMapper.ToCurrencyDTO(dbResult.Data!);
+
+            return BaseResponse<CurrencyDTO>.Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            return BaseResponse<CurrencyDTO>.InternalServerError();
+        }
+    }
+
+    public async Task<IBaseResponse<CurrencyDTO>> GetByCodeAsync(string code)
+    {
+        try
+        {
+            var dbResult = await currencyRepository.GetByCodeAsync(code);
+
+            if (!dbResult.IsSuccess)
+                return BaseResponse<CurrencyDTO>.NotFound();
+
+            var dto = CurrencyMapper.ToCurrencyDTO(dbResult.Data!);
+
             return BaseResponse<CurrencyDTO>.Ok(dto);
         }
         catch (Exception ex)
@@ -82,18 +98,18 @@ public class CurrencyCurrencyService(IRepository<Currency, CurrencyEntity> curre
     {
         try
         {
-            var domainResult = CurrencyMapper.ToCurrencyDomainModel(id, dto);
+            var domainResult = CurrencyMapper.ToCurrency(id, dto);
 
-            if (!domainResult.IsSuccess || domainResult.Data == null)
-                return BaseResponse<CurrencyDTO>.UnprocessableEntity(domainResult.Errors);
+            if (!domainResult.IsSuccess)
+                return BaseResponse<CurrencyDTO>.UnprocessableEntity(domainResult.Errors!);
 
-            var dbResult = await currencyRepository.UpdateAsync(id, domainResult.Data);
+            var dbResult = await currencyRepository.UpdateAsync(id, domainResult.Data!);
 
-            if (!dbResult.IsSuccess || dbResult.Data == null)
+            if (!dbResult.IsSuccess)
                 return BaseResponse<CurrencyDTO>.NotFound();
 
-            var currencyDTO = CurrencyMapper.ToCurrencyDTO(dbResult.Data);
-            
+            var currencyDTO = CurrencyMapper.ToCurrencyDTO(dbResult.Data!);
+
             return BaseResponse<CurrencyDTO>.Ok(currencyDTO);
         }
         catch (Exception ex)

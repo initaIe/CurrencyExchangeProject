@@ -1,8 +1,6 @@
 ﻿using CurrencyExchange.DAL.Commons;
-using CurrencyExchange.DAL.Entities;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Models;
-using CurrencyExchange.Domain.Result;
 using CurrencyExchange.Domain.Result.Implementations;
 using CurrencyExchange.Domain.Result.Interfaces;
 using Microsoft.Data.Sqlite;
@@ -10,7 +8,7 @@ using Microsoft.Data.Sqlite;
 namespace CurrencyExchange.DAL.Repository.Implementations;
 
 public class ExchangeRateRepository(DataBase db)
-    : IRepository<ExchangeRate, ExchangeRateEntity>
+    : IExchangeRateRepository
 {
     public async Task<IResult<ExchangeRate>> CreateAsync(ExchangeRate exchangeRate)
     {
@@ -31,10 +29,10 @@ public class ExchangeRateRepository(DataBase db)
 
         return isCreated
             ? Result<ExchangeRate>.Success(exchangeRate)
-            : Result<ExchangeRate>.Failure();
+            : Result<ExchangeRate>.Failure("[DB] Create exchangeRate error: conflict.");
     }
 
-    public async Task<IResult<ExchangeRateEntity>> GetByIdAsync(Guid id)
+    public async Task<IResult<ExchangeRate>> GetByIdAsync(Guid id)
     {
         var commandText = "SELECT " +
                           "er.Id AS ExchangeRateId, " +
@@ -59,36 +57,92 @@ public class ExchangeRateRepository(DataBase db)
 
         var exchangeRate = await db.QuerySingleOrDefaultAsync(
             commandText,
-            reader => new ExchangeRateEntity
-            {
-                Id = reader.GetString(0),
-                BaseCurrency = new CurrencyEntity
-                {
-                    Id = reader.GetString(1),
-                    Code = reader.GetString(2),
-                    FullName = reader.GetString(3),
-                    Sign = reader.GetString(4)
-                },
-                TargetCurrency = new CurrencyEntity
-                {
-                    Id = reader.GetString(5),
-                    Code = reader.GetString(6),
-                    FullName = reader.GetString(7),
-                    Sign = reader.GetString(8)
-                },
-                Rate = reader.GetDecimal(9)
-            },
+            reader => ExchangeRate.CreateWithoutValidation
+            (
+                Guid.Parse(reader.GetString(0)),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(1)),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4)
+                ),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(5)),
+                    reader.GetString(6),
+                    reader.GetString(7),
+                    reader.GetString(8)
+                ),
+                reader.GetDecimal(9)
+            ),
             parameters
         );
 
         var isReceived = exchangeRate != null;
 
         return isReceived
-            ? Result<ExchangeRateEntity>.Success(exchangeRate!)
-            : Result<ExchangeRateEntity>.Failure();
+            ? Result<ExchangeRate>.Success(exchangeRate!)
+            : Result<ExchangeRate>.Failure("[DB] GetById exchangeRate error: not found.");
     }
 
-    public async Task<IResult<IEnumerable<ExchangeRateEntity>>> GetAllAsync(int limit, int offset)
+    public async Task<IResult<ExchangeRate>> GetByCodePairAsync(string fromCode,
+        string toCode)
+    {
+        var commandText = "SELECT " +
+                          "er.Id AS ExchangeRateId, " +
+                          "bc.Id AS BaseCurrencyId, " +
+                          "bc.Code AS BaseCurrencyCode, " +
+                          "bc.FullName AS BaseCurrencyFullName, " +
+                          "bc.Sign AS BaseCurrencySign, " +
+                          "tc.Id AS TargetCurrencyId, " +
+                          "tc.Code AS TargetCurrencyCode, " +
+                          "tc.FullName AS TargetCurrencyFullName, " +
+                          "tc.Sign AS TargetCurrencySign, " +
+                          "er.Rate " +
+                          "FROM  ExchangeRates er " +
+                          "JOIN  Currencies bc ON er.BaseCurrencyId = bc.Id " +
+                          "JOIN Currencies tc ON er.TargetCurrencyId = tc.Id " +
+                          "WHERE  bc.Code = @BaseCurrencyCode AND tc.Code = @TargetCurrencyCode;";
+
+        var parameters = new[]
+        {
+            new SqliteParameter("@BaseCurrencyCode", fromCode),
+            new SqliteParameter("@TargetCurrencyCode", toCode)
+        };
+
+        var exchangeRate = await db.QuerySingleOrDefaultAsync(
+            commandText,
+            reader => ExchangeRate.CreateWithoutValidation
+            (
+                Guid.Parse(reader.GetString(0)),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(1)),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4)
+                ),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(5)),
+                    reader.GetString(6),
+                    reader.GetString(7),
+                    reader.GetString(8)
+                ),
+                reader.GetDecimal(9)
+            ),
+            parameters
+        );
+
+        var isReceived = exchangeRate != null;
+
+        return isReceived
+            ? Result<ExchangeRate>.Success(exchangeRate!)
+            : Result<ExchangeRate>.Failure("[DB] GetByCode exchangeRate error: not found.");
+    }
+
+    public async Task<IResult<IEnumerable<ExchangeRate>>> GetAllAsync(int limit, int offset)
     {
         var commandText = "SELECT " +
                           "er.Id AS ExchangeRateId, " +
@@ -121,25 +175,25 @@ public class ExchangeRateRepository(DataBase db)
 
         var exchangeRates = await db.QueryAsync(
             commandText,
-            reader => new ExchangeRateEntity
-            {
-                Id = reader.GetString(0),
-                BaseCurrency = new CurrencyEntity
-                {
-                    Id = reader.GetString(1),
-                    Code = reader.GetString(2),
-                    FullName = reader.GetString(3),
-                    Sign = reader.GetString(4)
-                },
-                TargetCurrency = new CurrencyEntity
-                {
-                    Id = reader.GetString(5),
-                    Code = reader.GetString(6),
-                    FullName = reader.GetString(7),
-                    Sign = reader.GetString(8)
-                },
-                Rate = reader.GetDecimal(9)
-            },
+            reader => ExchangeRate.CreateWithoutValidation
+            (
+                Guid.Parse(reader.GetString(0)),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(1)),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4)
+                ),
+                Currency.CreateWithoutValidation
+                (
+                    Guid.Parse(reader.GetString(5)),
+                    reader.GetString(6),
+                    reader.GetString(7),
+                    reader.GetString(8)
+                ),
+                reader.GetDecimal(9)
+            ),
             parameters
         );
 
@@ -148,8 +202,9 @@ public class ExchangeRateRepository(DataBase db)
         var isReceived = exchangeRatesList.Count > 0;
 
         return isReceived
-            ? Result<IEnumerable<ExchangeRateEntity>>.Success(exchangeRatesList)
-            : Result<IEnumerable<ExchangeRateEntity>>.Failure();
+            ? Result<IEnumerable<ExchangeRate>>.Success(exchangeRatesList)
+            : Result<IEnumerable<ExchangeRate>>.Failure("[DB] GetAll exchangeRates error: not found.");
+
     }
 
     public async Task<IResult<Guid>> DeleteAsync(Guid id)
@@ -168,7 +223,7 @@ public class ExchangeRateRepository(DataBase db)
 
         return isDeleted
             ? Result<Guid>.Success(id)
-            : Result<Guid>.Failure();
+            : Result<Guid>.Failure("[DB] Delete exchangeRate error: not found.");
     }
 
     public async Task<IResult<ExchangeRate>> UpdateAsync(Guid id, ExchangeRate exchangeRate)
@@ -177,11 +232,11 @@ public class ExchangeRateRepository(DataBase db)
                           "SET BaseCurrencyId = @BaseCurrencyId, " +
                           "TargetCurrencyId = @TargetCurrencyId, " +
                           "Rate = @Rate " +
-                          "WHERE Id = @OldId;";
+                          "WHERE Id = @Id;";
 
         var parameters = new[]
         {
-            new SqliteParameter("@Id", exchangeRate.Id),
+            new SqliteParameter("@Id", id),
             new SqliteParameter("@BaseCurrencyId", exchangeRate.BaseCurrency.Id),
             new SqliteParameter("@TargetCurrencyId", exchangeRate.TargetCurrency.Id),
             new SqliteParameter("@Rate", exchangeRate.Rate)
@@ -193,6 +248,6 @@ public class ExchangeRateRepository(DataBase db)
 
         return isUpdated
             ? Result<ExchangeRate>.Success(exchangeRate)
-            : Result<ExchangeRate>.Failure();
+            : Result<ExchangeRate>.Failure("[DB] Update exchangeRate error: conflict/not found.");
     }
 }

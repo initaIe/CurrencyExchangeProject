@@ -1,13 +1,15 @@
-﻿using CurrencyExchange.Domain.Result;
+﻿using CurrencyExchange.Domain.Helpers;
 using CurrencyExchange.Domain.Result.Implementations;
 
 namespace CurrencyExchange.Domain.Models;
 
 public class Currency
 {
-    public const int MaxCodeLength = 3;
-    public const int MaxFullNameLength = 50;
-    public const int MaxSignLength = 10;
+    public const int CodeLength = 3;
+    public const int MinFullNameLength = 1;
+    public const int MaxFullNameLength = 30;
+    public const int MinSignLength = 1;
+    public const int MaxSignLength = 4;
 
     private Currency(Guid id, string code, string fullName, string sign)
     {
@@ -21,27 +23,43 @@ public class Currency
     public string Code { get; }
     public string FullName { get; }
     public string Sign { get; }
-    
-    public static DomainModelCreationResult<Currency> Create(Guid id, string code, string fullName, string sign)
+
+    // Используется для создания доменной модели при создании нового объекта, который требуется провалидировать
+    public static Result<Currency> Create(Guid id, string code, string fullName, string sign)
     {
         List<string> errors = [];
 
-        if (Guid.Empty.Equals(id))
-            errors.Add("Guid Id cannot be empty");
+        var guidEmptyValidation = GuidValidator.Validate(id);
+        ResultHelper.AddErrorsIfNotSuccess(guidEmptyValidation, errors);
 
-        if (string.IsNullOrEmpty(code) || code.Length > Currency.MaxCodeLength)
-            errors.Add("Code cannot be null, empty or larger than 3 symbols.");
+        var codeLengthValidation = StringValidator.Length(code, CodeLength);
+        ResultHelper.AddErrorsIfNotSuccess(codeLengthValidation, errors);
 
-        if (string.IsNullOrEmpty(fullName) || fullName.Length > Currency.MaxFullNameLength)
-            errors.Add("FullName cannot be null, empty or larger than 50 symbols.");
+        var codeCaseValidation = StringValidator.Case(code, true);
+        ResultHelper.AddErrorsIfNotSuccess(codeCaseValidation, errors);
 
-        if (string.IsNullOrEmpty(sign) || sign.Length > Currency.MaxSignLength)
-            errors.Add("Sign cannot be null, empty or larger than 10 symbols.");
+        var fullNameMinMaxValidation = StringValidator.MinMaxLength(fullName, MinFullNameLength, MaxFullNameLength);
+        ResultHelper.AddErrorsIfNotSuccess(fullNameMinMaxValidation, errors);
 
-        if (errors.Count > 0) return DomainModelCreationResult<Currency>.Failure(errors);
+        var fullNameNullEmptyValidation = StringValidator.NullEmpty(fullName);
+        ResultHelper.AddErrorsIfNotSuccess(fullNameNullEmptyValidation, errors);
+
+        var signMinMaxValidation = StringValidator.MinMaxLength(sign, MinSignLength, MaxSignLength);
+        ResultHelper.AddErrorsIfNotSuccess(signMinMaxValidation, errors);
+
+        var signNullEmptyValidation = StringValidator.NullEmpty(sign);
+        ResultHelper.AddErrorsIfNotSuccess(signNullEmptyValidation, errors);
+
+        if (errors.Count > 0) return Result<Currency>.Failure(errors);
 
         var currency = new Currency(id, code, fullName, sign);
 
-        return DomainModelCreationResult<Currency>.Success(currency);
+        return Result<Currency>.Success(currency);
+    }
+
+    // Используется для создания доменной модели при получении из БД уже ВАЛИДНОГО ОБЪЕКТА
+    public static Currency CreateWithoutValidation(Guid id, string code, string fullName, string sign)
+    {
+        return new Currency(id, code, fullName, sign);
     }
 }
