@@ -1,7 +1,6 @@
-﻿using CurrencyExchange.Contracts.Exchange.DTOs;
+﻿using CurrencyExchange.Contracts.ExchangeContracts.DTOs;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Helpers;
-using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Response.Implementations;
 using CurrencyExchange.Domain.Response.Interfaces;
 using CurrencyExchange.Domain.Result.Implementations;
@@ -15,28 +14,33 @@ public class ExchangeService(
     IExchangeRateRepository exchangeRateRepository)
     : IExchangeService
 {
-    public async Task<IBaseResponse<ExchangeDTO>> GetAsync(CreateExchangeDTO dto)
+    public async Task<IBaseResponse<ExchangeDTO>> GetAsync(GetExchangeDTO dto)
     {
         var optimalRateResult = await GetOptimalRateAsync(dto.FromCode, dto.ToCode);
 
         if (!optimalRateResult.IsSuccess)
             return BaseResponse<ExchangeDTO>.NotFound();
-        
+
         var fromCurrencyDbResult = await currencyRepository.GetByCodeAsync(dto.FromCode);
-        
+
         if (!fromCurrencyDbResult.IsSuccess)
             return BaseResponse<ExchangeDTO>.NotFound();
-        
+
         var toCurrencyDbResult = await currencyRepository.GetByCodeAsync(dto.ToCode);
-        
+
         if (!toCurrencyDbResult.IsSuccess)
             return BaseResponse<ExchangeDTO>.NotFound();
 
-        var fromCurrencyDTO = CurrencyMapper.ToCurrencyDTO(fromCurrencyDbResult.Data!); 
-        
-        var toCurrencyDTO = CurrencyMapper.ToCurrencyDTO(toCurrencyDbResult.Data!); 
-        
-        var exchangeDTO = new ExchangeDTO(fromCurrencyDTO, toCurrencyDTO, optimalRateResult.Data!, dto.Amount);
+        var fromCurrencyDTO = CurrencyMapper.ToCurrencyDTO(fromCurrencyDbResult.Data!);
+
+        var toCurrencyDTO = CurrencyMapper.ToCurrencyDTO(toCurrencyDbResult.Data!);
+
+        var exchangeDTO = new ExchangeDTO(
+            fromCurrencyDTO,
+            toCurrencyDTO,
+            optimalRateResult.Data!,
+            dto.Amount,
+            ExchangeCalculator.Calculate(dto.Amount, optimalRateResult.Data!));
 
         return BaseResponse<ExchangeDTO>.Ok(exchangeDTO);
     }
@@ -63,9 +67,8 @@ public class ExchangeService(
 
     public async Task<Result<decimal>> GetDirectRateAsync(string fromCode, string toCode)
     {
-        var directExchangeRateDbResult = await exchangeRateRepository.GetByCodePairAsync(
-            fromCode,
-            toCode);
+        var directExchangeRateDbResult = await exchangeRateRepository
+            .GetByCodePairAsync(fromCode, toCode);
 
         if (!directExchangeRateDbResult.IsSuccess)
             return Result<decimal>.Failure();
@@ -77,9 +80,8 @@ public class ExchangeService(
 
     public async Task<Result<decimal>> GetReverseRateAsync(string fromCode, string toCode)
     {
-        var reverseExchangeRateDbResult = await exchangeRateRepository.GetByCodePairAsync(
-            toCode,
-            fromCode);
+        var reverseExchangeRateDbResult = await exchangeRateRepository
+            .GetByCodePairAsync(toCode, fromCode);
 
         if (!reverseExchangeRateDbResult.IsSuccess)
             return Result<decimal>.Failure();
@@ -93,16 +95,18 @@ public class ExchangeService(
     {
         const string baseCurrencyCode = "USD";
 
-        var currentCurrencyToBaseCurrency =
-            await exchangeRateRepository.GetByCodePairAsync(fromCode, baseCurrencyCode);
+        var currentCurrencyToBaseCurrency = await exchangeRateRepository
+            .GetByCodePairAsync(fromCode, baseCurrencyCode);
 
-        var targetCurrencyToBase =
-            await exchangeRateRepository.GetByCodePairAsync(toCode, baseCurrencyCode);
+        if (!currentCurrencyToBaseCurrency.IsSuccess) return Result<decimal>.Failure();
 
-        if (!currentCurrencyToBaseCurrency.IsSuccess || !targetCurrencyToBase.IsSuccess)
-            return Result<decimal>.Failure();
+        var targetCurrencyToBase = await exchangeRateRepository
+            .GetByCodePairAsync(toCode, baseCurrencyCode);
 
-        var crossRate = RateConverter.GetFromCrossRates(currentCurrencyToBaseCurrency.Data!.Rate,
+        if (!targetCurrencyToBase.IsSuccess) return Result<decimal>.Failure();
+
+        var crossRate = RateConverter.GetFromCrossRates(
+            currentCurrencyToBaseCurrency.Data!.Rate,
             targetCurrencyToBase.Data!.Rate);
 
         return Result<decimal>.Success(crossRate);

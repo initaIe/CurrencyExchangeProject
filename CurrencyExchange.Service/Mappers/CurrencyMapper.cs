@@ -1,4 +1,4 @@
-﻿using CurrencyExchange.Contracts.Currency.DTOs;
+﻿using CurrencyExchange.Contracts.CurrencyContracts.DTOs;
 using CurrencyExchange.Domain.Models;
 using CurrencyExchange.Domain.Result.Implementations;
 

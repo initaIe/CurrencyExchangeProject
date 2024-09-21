@@ -27,7 +27,7 @@ public class ExchangeRate
         List<string> errors = [];
 
         var guidEmptyValidation = GuidValidator.Validate(id);
-        ResultHelper.AddErrorsIfNotSuccess(guidEmptyValidation, errors);
+        guidEmptyValidation.AddErrorsIfNotSuccess(errors);
 
         if (!DecimalHelper.HasValidDecimalPrecision(rate, MaxDecimalPrecision))
             rate = Math.Round(rate, MaxDecimalPrecision);

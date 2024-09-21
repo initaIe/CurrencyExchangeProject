@@ -204,7 +204,6 @@ public class ExchangeRateRepository(DataBase db)
         return isReceived
             ? Result<IEnumerable<ExchangeRate>>.Success(exchangeRatesList)
             : Result<IEnumerable<ExchangeRate>>.Failure("[DB] GetAll exchangeRates error: not found.");
-
     }
 
     public async Task<IResult<Guid>> DeleteAsync(Guid id)

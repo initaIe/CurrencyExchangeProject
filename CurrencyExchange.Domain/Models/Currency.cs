@@ -29,26 +29,19 @@ public class Currency
     {
         List<string> errors = [];
 
-        var guidEmptyValidation = GuidValidator.Validate(id);
-        ResultHelper.AddErrorsIfNotSuccess(guidEmptyValidation, errors);
+        GuidValidator.Validate(id).AddErrorsIfNotSuccess(errors);
 
-        var codeLengthValidation = StringValidator.Length(code, CodeLength);
-        ResultHelper.AddErrorsIfNotSuccess(codeLengthValidation, errors);
+        StringValidator.Length(code, CodeLength).AddErrorsIfNotSuccess(errors);
 
-        var codeCaseValidation = StringValidator.Case(code, true);
-        ResultHelper.AddErrorsIfNotSuccess(codeCaseValidation, errors);
+        StringValidator.Case(code, true).AddErrorsIfNotSuccess(errors);
 
-        var fullNameMinMaxValidation = StringValidator.MinMaxLength(fullName, MinFullNameLength, MaxFullNameLength);
-        ResultHelper.AddErrorsIfNotSuccess(fullNameMinMaxValidation, errors);
+        StringValidator.MinMaxLength(fullName, MinFullNameLength, MaxFullNameLength).AddErrorsIfNotSuccess(errors);
 
-        var fullNameNullEmptyValidation = StringValidator.NullEmpty(fullName);
-        ResultHelper.AddErrorsIfNotSuccess(fullNameNullEmptyValidation, errors);
+        StringValidator.NullEmpty(fullName).AddErrorsIfNotSuccess(errors);
 
-        var signMinMaxValidation = StringValidator.MinMaxLength(sign, MinSignLength, MaxSignLength);
-        ResultHelper.AddErrorsIfNotSuccess(signMinMaxValidation, errors);
+        StringValidator.MinMaxLength(sign, MinSignLength, MaxSignLength).AddErrorsIfNotSuccess(errors);
 
-        var signNullEmptyValidation = StringValidator.NullEmpty(sign);
-        ResultHelper.AddErrorsIfNotSuccess(signNullEmptyValidation, errors);
+        StringValidator.NullEmpty(sign).AddErrorsIfNotSuccess(errors);
 
         if (errors.Count > 0) return Result<Currency>.Failure(errors);
 

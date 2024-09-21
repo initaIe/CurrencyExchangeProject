@@ -1,12 +1,12 @@
-﻿using CurrencyExchange.Contracts.Currency.DTOs;
-using CurrencyExchange.Contracts.Currency.Requests;
-using CurrencyExchange.Contracts.Currency.Responses;
+﻿using CurrencyExchange.Contracts.CurrencyContracts.DTOs;
+using CurrencyExchange.Contracts.CurrencyContracts.Requests;
+using CurrencyExchange.Contracts.CurrencyContracts.Responses;
 
 namespace CurrencyExchange.API.Mappers;
 
 public static class CurrencyMapper
 {
-    public static CurrencyResponse ToCurrencyResponse(CurrencyDTO dto)
+    public static CurrencyResponse ToCurrencyResponse(this CurrencyDTO dto)
     {
         return new CurrencyResponse(
             dto.Id,
@@ -15,7 +15,7 @@ public static class CurrencyMapper
             dto.Sign);
     }
 
-    public static CreateCurrencyDTO ToCreateCurrencyDTO(CreateCurrencyRequest request)
+    public static CreateCurrencyDTO ToCreateCurrencyDTO(this CreateCurrencyRequest request)
     {
         return new CreateCurrencyDTO(
             request.Code,
@@ -23,7 +23,7 @@ public static class CurrencyMapper
             request.Sign);
     }
 
-    public static UpdateCurrencyDTO ToUpdateCurrencyDTO(UpdateCurrencyRequest request)
+    public static UpdateCurrencyDTO ToUpdateCurrencyDTO(this UpdateCurrencyRequest request)
     {
         return new UpdateCurrencyDTO(
             request.Code,

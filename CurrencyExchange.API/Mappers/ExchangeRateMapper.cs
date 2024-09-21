@@ -1,30 +1,21 @@
-﻿using CurrencyExchange.Contracts.Currency.Responses;
-using CurrencyExchange.Contracts.ExchangeRate.DTOs;
-using CurrencyExchange.Contracts.ExchangeRate.Requests;
-using CurrencyExchange.Contracts.ExchangeRate.Responses;
+﻿using CurrencyExchange.Contracts.ExchangeRateContracts.DTOs;
+using CurrencyExchange.Contracts.ExchangeRateContracts.Requests;
+using CurrencyExchange.Contracts.ExchangeRateContracts.Responses;
 
 namespace CurrencyExchange.API.Mappers;
 
-public class ExchangeRateMapper
+public static class ExchangeRateMapper
 {
-    public static ExchangeRateResponse ToExchangeRateResponse(ExchangeRateDTO dto)
+    public static ExchangeRateResponse ToExchangeRateResponse(this ExchangeRateDTO dto)
     {
         return new ExchangeRateResponse(
             dto.Id,
-            new CurrencyResponse(
-                dto.BaseCurrency.Id,
-                dto.BaseCurrency.Code,
-                dto.BaseCurrency.FullName,
-                dto.BaseCurrency.Sign),
-            new CurrencyResponse(
-                dto.TargetCurrency.Id,
-                dto.TargetCurrency.Code,
-                dto.TargetCurrency.FullName,
-                dto.TargetCurrency.Sign),
+            dto.BaseCurrency.ToCurrencyResponse(),
+            dto.TargetCurrency.ToCurrencyResponse(),
             dto.Rate);
     }
 
-    public static CreateExchangeRateDTO ToCreateExchangeRateDTO(CreateExchangeRateRequest request)
+    public static CreateExchangeRateDTO ToCreateExchangeRateDTO(this CreateExchangeRateRequest request)
     {
         return new CreateExchangeRateDTO(
             request.BaseCurrencyId,
@@ -32,7 +23,7 @@ public class ExchangeRateMapper
             request.Rate);
     }
 
-    public static UpdateExchangeRateDTO ToUpdateExchangeRateDTO(UpdateExchangeRateRequest request)
+    public static UpdateExchangeRateDTO ToUpdateExchangeRateDTO(this UpdateExchangeRateRequest request)
     {
         return new UpdateExchangeRateDTO(
             request.BaseCurrencyId,

@@ -1,4 +1,4 @@
-﻿using CurrencyExchange.Contracts.ExchangeRate.DTOs;
+﻿using CurrencyExchange.Contracts.ExchangeRateContracts.DTOs;
 using CurrencyExchange.DAL.Repository.Interfaces;
 using CurrencyExchange.Domain.Helpers;
 using CurrencyExchange.Domain.Response.Implementations;

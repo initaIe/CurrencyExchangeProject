@@ -1,7 +1,6 @@
 ﻿using CurrencyExchange.API.Mappers;
-using CurrencyExchange.Contracts.ExchangeRate.Requests;
-using CurrencyExchange.Contracts.ExchangeRate.Responses;
-using CurrencyExchange.Contracts.Page;
+using CurrencyExchange.Contracts.ExchangeRateContracts.Requests;
+using CurrencyExchange.Contracts.PageContracts;
 using CurrencyExchange.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,17 +16,16 @@ public class ExchangeRateController(IExchangeRateService exchangeRateService)
     {
         var response = await exchangeRateService.GetAllAsync(pageRequest.Size, pageRequest.Number);
 
-        IEnumerable<ExchangeRateResponse> exchangeRateResponses = [];
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            exchangeRateResponses = response.Data.Select(ExchangeRateMapper.ToExchangeRateResponse);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(exchangeRateResponses),
-            _ => StatusCode(500, response.Message)
-        };
+        var exchangeRateResponse
+            = response.Data.Select(x => x.ToExchangeRateResponse());
+        return Ok(exchangeRateResponse);
     }
 
     [HttpGet("{id:guid}")]
@@ -35,17 +33,16 @@ public class ExchangeRateController(IExchangeRateService exchangeRateService)
     {
         var response = await exchangeRateService.GetByIdAsync(id);
 
-        ExchangeRateResponse exchangeRateResponses = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            exchangeRateResponses = ExchangeRateMapper.ToExchangeRateResponse(response.Data);
+        var exchangeRateResponses = response.Data.ToExchangeRateResponse();
 
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(exchangeRateResponses),
-            _ => StatusCode(500, response.Message)
-        };
+        return Ok(exchangeRateResponses);
     }
 
     [HttpGet("{codes}")]
@@ -53,60 +50,54 @@ public class ExchangeRateController(IExchangeRateService exchangeRateService)
     {
         var response = await exchangeRateService.GetByCurrencyCodePairAsync(codes);
 
-        ExchangeRateResponse exchangeRateResponses = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.BadRequest => BadRequest(response.Message),
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            exchangeRateResponses = ExchangeRateMapper.ToExchangeRateResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.BadRequest => BadRequest(response.Message),
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(exchangeRateResponses),
-            _ => StatusCode(500, response.Message)
-        };
+        var exchangeRateResponses = response.Data.ToExchangeRateResponse();
+        return Ok(exchangeRateResponses);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateExchangeRateRequest request)
     {
-        var dto = ExchangeRateMapper.ToCreateExchangeRateDTO(request);
+        var dto = request.ToCreateExchangeRateDTO();
 
         var response = await exchangeRateService.CreateAsync(dto);
 
-        ExchangeRateResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
+                Domain.Enums.StatusCode.Conflict => Conflict(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = ExchangeRateMapper.ToExchangeRateResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
-            Domain.Enums.StatusCode.Created => StatusCode(201, currencyResponse),
-            Domain.Enums.StatusCode.Conflict => Conflict(response.Message),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToExchangeRateResponse();
+        return StatusCode(201, currencyResponse);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateExchangeRateRequest request)
     {
-        var dto = ExchangeRateMapper.ToUpdateExchangeRateDTO(request);
+        var dto = request.ToUpdateExchangeRateDTO();
 
         var response = await exchangeRateService.UpdateAsync(id, dto);
 
-        ExchangeRateResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = ExchangeRateMapper.ToExchangeRateResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.Created => Ok(currencyResponse),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToExchangeRateResponse();
+        return Ok(currencyResponse);
     }
 
     [HttpDelete("{id:guid}")]

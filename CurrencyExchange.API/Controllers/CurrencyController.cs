@@ -1,7 +1,6 @@
 ﻿using CurrencyExchange.API.Mappers;
-using CurrencyExchange.Contracts.Currency.Requests;
-using CurrencyExchange.Contracts.Currency.Responses;
-using CurrencyExchange.Contracts.Page;
+using CurrencyExchange.Contracts.CurrencyContracts.Requests;
+using CurrencyExchange.Contracts.PageContracts;
 using CurrencyExchange.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,17 +15,16 @@ public class CurrencyController(ICurrencyService currencyCurrencyService) : Cont
     {
         var response = await currencyCurrencyService.GetAllAsync(request.Size, request.Number);
 
-        IEnumerable<CurrencyResponse> currencyResponse = [];
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = response.Data.Select(CurrencyMapper.ToCurrencyResponse);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(currencyResponse),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data
+            .Select(x => x.ToCurrencyResponse());
+        return Ok(currencyResponse);
     }
 
     [HttpGet("{id:guid}")]
@@ -34,17 +32,15 @@ public class CurrencyController(ICurrencyService currencyCurrencyService) : Cont
     {
         var response = await currencyCurrencyService.GetByIdAsync(id);
 
-        CurrencyResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = CurrencyMapper.ToCurrencyResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(currencyResponse),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToCurrencyResponse();
+        return Ok(currencyResponse);
     }
 
     [HttpGet("{code}")]
@@ -52,59 +48,53 @@ public class CurrencyController(ICurrencyService currencyCurrencyService) : Cont
     {
         var response = await currencyCurrencyService.GetByCodeAsync(code);
 
-        CurrencyResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = CurrencyMapper.ToCurrencyResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(currencyResponse),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToCurrencyResponse();
+        return Ok(currencyResponse);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateCurrencyRequest request)
     {
-        var dto = CurrencyMapper.ToCreateCurrencyDTO(request);
+        var dto = request.ToCreateCurrencyDTO();
 
         var response = await currencyCurrencyService.CreateAsync(dto);
 
-        CurrencyResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
+                Domain.Enums.StatusCode.Conflict => Conflict(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = CurrencyMapper.ToCurrencyResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
-            Domain.Enums.StatusCode.Created => StatusCode(201, currencyResponse),
-            Domain.Enums.StatusCode.Conflict => Conflict(response.Message),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToCurrencyResponse();
+        return StatusCode(201, currencyResponse);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateCurrencyRequest request)
     {
-        var dto = CurrencyMapper.ToUpdateCurrencyDTO(request);
+        var dto = request.ToUpdateCurrencyDTO();
 
         var response = await currencyCurrencyService.UpdateAsync(id, dto);
 
-        CurrencyResponse currencyResponse = null!;
+        if (response.Data == null)
+            return response.StatusCode switch
+            {
+                Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
+                Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
+                _ => StatusCode(500, response.Message)
+            };
 
-        if (response.Data != null)
-            currencyResponse = CurrencyMapper.ToCurrencyResponse(response.Data);
-
-        return response.StatusCode switch
-        {
-            Domain.Enums.StatusCode.UnprocessableEntity => StatusCode(422, response.Errors),
-            Domain.Enums.StatusCode.NotFound => NotFound(response.Message),
-            Domain.Enums.StatusCode.OK => Ok(currencyResponse),
-            _ => StatusCode(500, response.Message)
-        };
+        var currencyResponse = response.Data.ToCurrencyResponse();
+        return Ok(currencyResponse);
     }
 
     [HttpDelete("{id:guid}")]

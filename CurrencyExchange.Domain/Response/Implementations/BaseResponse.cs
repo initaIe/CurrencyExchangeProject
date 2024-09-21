@@ -82,7 +82,7 @@ public class BaseResponse<T> : IBaseResponse<T>
             default,
             null);
     }
-    
+
     public static BaseResponse<T> NotFound()
     {
         return new BaseResponse<T>(
